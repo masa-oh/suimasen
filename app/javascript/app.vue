@@ -1,22 +1,22 @@
 <template>
-  <div id="app">
-    <p>{{ message }}</p>
+  <div class="d-flex flex-column min-vh-100">
+    <TheHeader />
+    <router-view />
+    <TheFooter />
   </div>
 </template>
 
 <script>
+import TheHeader from './components/TheHeader.vue'
+import TheFooter from './components/TheFooter.vue'
+
 export default {
-  data: function () {
-    return {
-      message: "Hello Vue!"
-    }
+  components: {
+    TheHeader,
+    TheFooter,
   }
 }
 </script>
 
 <style scoped>
-p {
-  font-size: 2em;
-  text-align: center;
-}
 </style>
