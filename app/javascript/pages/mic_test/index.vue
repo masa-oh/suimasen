@@ -1,120 +1,90 @@
 <template>
-  <div class="video-container">
-    <div class="video-area">
-      <video
-        id="my-video"
-        autoplay
-        playsinline />
+  <section class="section">
+    <div class="columns">
+      <div class="column">
+        <meter :value="volume" min="-96" max="0" high="-40"></meter> <span>{{ volume }}</span>
+      </div>
     </div>
-    <div class="btns">
-      <button :class="isMuteAudio ? 'can' : 'disabled'" @click="muteAudio()">audio</button>
-      <button :class="isMuteVideo ? 'can' : 'disabled'" @click="muteVideo()">video</button>
+    <div class="buttons">
+      <button v-if="!isConnectedToMic" @click="getUserMedia">音声の取得を開始する</button>
+      <button v-if="isConnectedToMic" @click="disconnectMedia">音声の取得を停止する</button>
     </div>
-  </div>
+  </section>
 </template>
 
 <script>
 export default {
-  name: "MicTestIndex",
-  data () {
+  data() {
     return {
-      videos: [],
-      audios: [],
-      selectedAudio: '',
-      selectedVideo: '',
-      localStream: null,
-      isMuteAudio: false,
-      isMuteVideo: false
+      localstream: null,
+      streamConst: {
+        audio: true, // 録音する場合はaudio: trueとする
+        video: false,
+      },
+      audioContext: null,
+      audioScript: null,
+      mic: null,
+      volume: -96,
+      isConnectedToMic: false
     }
   },
-
-  async mounted () {
-    await this.prepareAudioVideoDevice()
-    await this.connectLocalCamera()
-  },
-
-  destroyed() {
-    this.disconnectLocalCamera()
-  },
-
+  mounted() {},
   methods: {
-    prepareAudioVideoDevice () {
-      navigator.mediaDevices.enumerateDevices()
-        .then(deviceInfos => {
-          // MediaDeviceInfo
-          // - deviceId （デバイスID)
-          // - kind 3type（audioinput, videoinput, audiooutput）
-          // - label （名称）※ 取得できる場合と、できない場合がある
-          // - groupId
-          const audios = [{ text: '指定なし', value: '' }]
-          const videos = [{ text: '指定なし', value: '' }]
-          for (let i = 0; i < deviceInfos.length; i++) {
-            const deviceInfo = deviceInfos[i]
-            if (deviceInfo.kind === 'audioinput') {
-              audios.push({
-                text: deviceInfo.label || `Microphone ${audios.length + 1}`,
-                value: deviceInfo.deviceId
-              })
-            } else if (deviceInfo.kind === 'videoinput') {
-              videos.push({
-                text: deviceInfo.label || `Camera  ${videos.length + 1}`,
-                value: deviceInfo.deviceId
-              })
-            }
-          }
-          this.audios = audios
-          this.videos = videos
-        })
-    },
-
-    connectLocalCamera () {
-      const constraints = {
-        audio: this.selectedAudio ? { deviceId: { exact: this.selectedAudio } } : true,
-        video: this.selectedVideo ? { deviceId: { exact: this.selectedVideo } } : true,
-      }
-
-      if (this.localStream) {
-        this.localStream = null
-      }
-
-      navigator.mediaDevices.getUserMedia(constraints)
+    getUserMedia() {
+      console.log('getUserMedia')
+      navigator.mediaDevices
+        .getUserMedia(this.streamConst)
         .then(stream => {
-          document.getElementById('my-video').srcObject = stream
-          this.localStream = stream
+          this.getLocalMediaStream(stream)
+          this.isConnectedToMic = true
         }).catch(error => {
-          console.error('mediaDevice.getUserMedia() error:', error)
+          console.error('mediaDevices.getUserMedia() error:', error)
         })
     },
 
-    muteAudio () {
-      if (!this.localStream) return
-      this.localStream.getAudioTracks()[0].enabled = !this.isMuteAudio
-      this.isMuteAudio = !this.isMuteAudio
-    },
+    getLocalMediaStream(mediaStream) {
+       this.localstream = mediaStream
 
-    muteVideo () {
-      if (!this.localStream) return
-      if (!this.isMuteVideo) {
-        // Mute
-        this.localStream.getVideoTracks()[0].stop()
-        this.localStream.removeTrack(this.localStream.getVideoTracks()[0])
-        document.getElementById('my-video').srcObject = null
-      } else {
-        // Re-connect
-        this.connectLocalCamera()
+      // 音声取得
+      // 音声コンテキストを作成
+      let audioContext = window.AudioContext
+      this.audioContext = new audioContext()
+      // 音声データを扱うためのオブジェクトを生成
+      // bufferSizeはOSごとに最適なサイズをあてる: https://weblike-curtaincall.ssl-lolipop.jp/portfolio-web-sounder/webaudioapi-basic/custom
+      this.audioScript = this.audioContext.createScriptProcessor(2048, 1, 1)
+      // audioContextで音声ストリームを扱えるようにする
+      this.mic = this.audioContext.createMediaStreamSource(mediaStream)
+
+      // それぞれをconnectで接続し、ストリームの音声データを扱えるようにする
+      this.mic.connect(this.audioScript)
+      this.audioScript.connect(this.audioContext.destination)
+
+      // イベントハンドラー
+      this.audioScript.onaudioprocess = this.handleLocalOnAudioProcess
+    },
+    handleLocalOnAudioProcess(event) {
+      // via. https://tech.drecom.co.jp/web_audio_api_audiobuffer/
+      // サンプリング周波数と量子化ビット数を-1〜1の間で正規化した値を Float32Array で保存
+      const input = event.inputBuffer.getChannelData(0) // 入力ソースの音声データを取得
+      let sum = 0.0
+
+      for(let i = 0; i < input.length; ++i) {
+        // inputBufferの値は-1〜1の間で正規化された数値であるため2乗することで正の数値に変更する
+        sum += input[i] * input[i]
       }
-      this.isMuteVideo = !this.isMuteVideo
+      // sum / input.length: inputBufferから取得した音量の平均値を取得
+      // 平方根を取ることで input[i] * input[i] の値をもとに戻す
+      this.volume = Math.sqrt(sum / input.length)
+      // 少数第3位を四捨五入し表示
+      // this.volume = this.volume.toFixed(2)
+      this.volume = 20 * Math.log10(this.volume);
     },
 
-    disconnectLocalCamera () {
-      if (!!this.localStream) {
-        this.localStream.getTracks().forEach(track => track.stop())
-        document.getElementById('my-video').srcObject = null
-        this.localStream = null
-      }
-    },
-
-  }
+    disconnectMedia() {
+      this.audioContext.close()
+      Object.assign(this.$data, this.$options.data()) 
+    }
+  },
 }
 </script>
 
