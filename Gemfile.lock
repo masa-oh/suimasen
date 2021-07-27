@@ -321,6 +321,8 @@ DEPENDENCIES
   rubocop-checkstyle_formatter
   rubocop-rails
   sass-rails (>= 6)
+  sassc (>= 2.0)
+  sassc-rails (~> 2.1, >= 2.1.1)
   spring
   spring-watcher-listen (~> 2.0.0)
   turbolinks (~> 5)
