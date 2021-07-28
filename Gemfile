@@ -11,6 +11,8 @@ gem 'mysql2', '>= 0.4.4'
 gem 'puma', '~> 4.1'
 # Use SCSS for stylesheets
 gem 'sass-rails', '>= 6'
+gem 'sassc-rails', '~> 2.1', '>= 2.1.1'
+gem 'sassc', '2.1.0'
 # Transpile app-like JavaScript. Read more: https://github.com/rails/webpacker
 gem 'webpacker', '~> 4.0'
 # Turbolinks makes navigating your web application faster. Read more: https://github.com/turbolinks/turbolinks
