@@ -207,8 +207,6 @@ GEM
       sassc-rails (~> 2.1, >= 2.1.1)
     sassc (2.1.0)
       ffi (~> 1.9)
-    sassc (2.1.0-x86_64-linux)
-      ffi (~> 1.9)
     sassc-rails (2.1.2)
       railties (>= 4.0.0)
       sassc (>= 2.0)
