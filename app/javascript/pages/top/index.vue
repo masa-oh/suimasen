@@ -5,13 +5,13 @@
       店員さん、ちゃんと呼べてますか？
     </div>
     <router-link
-      :to="{ name: 'TopIndex' }"
+      :to="{ name: 'MicTestIndex' }"
       class="btn btn-dark mt-5"
     >
       ログイン
     </router-link>
     <router-link
-      :to="{ name: 'TopIndex' }"
+      :to="{ name: 'MicTestIndex' }"
       class="btn btn-dark mt-5"
     >
       ログインせずに開始
