@@ -20,7 +20,7 @@
         </div>
         <div>
           <router-link :to="{ name: 'GameIndex' }">
-            <button class="btn btn-primary" :disabled="!checked">ゲーム開始</button>
+            <button class="btn btn-primary" :disabled="!checked" @click="disconnectMedia">ゲーム開始</button>
           </router-link>
         </div>
       </div>
