@@ -2,17 +2,12 @@ class Api::GamesController < ApplicationController
   def index; end
 
   def create
-    @spectrums = []
-    params.require(:spectrums).each{|spectrum|
-      permitted = spectrums_permit(record)
-      @spectrums.push(permitted)
-    }
-    render json: @spectrums[0]
-  end
+    game = Game.new
 
-  private
-
-  def test_params
-    params.require(:spectrums)
+    if game.save
+      render json: game
+    else
+      render json: game.errors, status: :bad_request
+    end
   end
 end

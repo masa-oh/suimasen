@@ -19,9 +19,7 @@
           <label for="checkbox">テスト完了！</label>
         </div>
         <div>
-          <router-link :to="{ name: 'GameIndex' }">
-            <button class="btn btn-primary" :disabled="!checked" @click="disconnectMedia">ゲーム開始</button>
-          </router-link>
+          <button class="btn btn-primary" :disabled="!checked" @click="startGame">ゲーム開始</button>
         </div>
       </div>
     </div>
@@ -201,17 +199,28 @@ export default {
     },
 
     disconnectMedia() {
-      // this.audioCtx.close()
-      // Object.assign(this.$data, this.$options.data()) 
-      this.audio.mic.disconnect(this.audio.processor)
-      this.audio.processor.disconnect(this.audio.ctx.destination)
-      this.audio.mic.disconnect(this.audio.analyser)
+      if (this.audio.running == true) {
+        // this.audioCtx.close()
+        // Object.assign(this.$data, this.$options.data()) 
+        this.audio.mic.disconnect(this.audio.processor)
+        this.audio.processor.disconnect(this.audio.ctx.destination)
+        this.audio.mic.disconnect(this.audio.analyser)
 
-      this.audio.processor.onaudioprocess = null
-      this.audio.running = false
-      
-      // axios.get('games', )
-      //  .then(res =>)
+        this.audio.processor.onaudioprocess = null
+        this.audio.running = false
+      }
+    },
+
+    async startGame() {
+      try {
+        await this.disconnectMedia(); 
+        axios.post('games')
+          .then(res => {
+            this.$router.push({ name: 'GameIndex', params: { game_id: res.data.id }})
+          })
+      } catch (error) {
+        console.log(error);
+      }
     }
   },
 }
