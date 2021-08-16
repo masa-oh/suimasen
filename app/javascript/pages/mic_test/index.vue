@@ -3,23 +3,55 @@
     <div class="row">
       <div class="d-flex flex-column col-lg-8">
         <div id="volume-meter">
-          <meter :value="audio.volume" min="-96" max="0" high="-40"></meter> <span>{{ audio.volume }}</span>
+          <meter
+            :value="audio.volume"
+            min="-96"
+            max="0"
+            high="-40"
+          /> <span>{{ audio.volume }}</span>
         </div>
         <div id="canvas-container">
-          <canvas id="canvas" ref="canvas" :width="canvas.width" :height="canvas.height"></canvas>
+          <canvas
+            id="canvas"
+            ref="canvas"
+            :width="canvas.width"
+            :height="canvas.height"
+          />
         </div>
       </div>
       <div class="d-flex flex-column justify-content-center align-items-center col-lg-4">
         <div id="mic_buttons">
-          <button v-if="!audio.running" @click="getUserMedia" class="btn btn--circle"><i class="fas fa-microphone"></i></br>START</button>
-          <button v-if="audio.running" @click="disconnectMedia" class="btn btn--circle"><i class="fas fa-microphone"></i></br>STOP</button>
+          <button
+            v-if="!audio.running"
+            class="btn btn--circle"
+            @click="getUserMedia"
+          >
+            <i class="fas fa-microphone" /><br>START
+          </button>
+          <button
+            v-if="audio.running"
+            class="btn btn--circle"
+            @click="disconnectMedia"
+          >
+            <i class="fas fa-microphone" /><br>STOP
+          </button>
         </div>
         <div class>
-          <input type="checkbox" id="checkbox" v-model="checked">
+          <input
+            id="checkbox"
+            v-model="checked"
+            type="checkbox"
+          >
           <label for="checkbox">テスト完了！</label>
         </div>
         <div>
-          <button class="btn btn-primary" :disabled="!checked" @click="startGame">ゲーム開始</button>
+          <button
+            class="btn btn-primary"
+            :disabled="!checked"
+            @click="startGame"
+          >
+            ゲーム開始
+          </button>
         </div>
       </div>
     </div>

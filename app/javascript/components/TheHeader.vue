@@ -1,6 +1,5 @@
 <template>
-  <header class="mb-auto">
-  </header>
+  <header class="mb-auto" />
 </template>
 
 <script>

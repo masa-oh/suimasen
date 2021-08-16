@@ -3,8 +3,8 @@
     <div class="row">
       <div class="d-flex flex-column col-lg-8">
         <div v-if="result">
-          <span>録音時間：{{ result.total_length }}秒</span><br/>
-          <span>発声認識時間：{{ result.valid_length }}秒</span><br/>
+          <span>録音時間：{{ result.total_length }}秒</span><br>
+          <span>発声認識時間：{{ result.valid_length }}秒</span><br>
           <span>周波数領域：{{ result.min_freq }}Hz〜{{ result.max_freq }}Hz</span>
         </div>
         <div v-if="recordfailed">
@@ -13,11 +13,28 @@
       </div>
       <div class="d-flex flex-column justify-content-center align-items-center col-lg-4">
         <div id="mic_buttons">
-          <button v-if="!audio.running" @click="getUserMedia" class="btn btn--circle"><i class="fas fa-microphone"></i></br>START</button>
-          <button v-if="audio.running" @click="disconnectMedia" class="btn btn--circle"><i class="fas fa-microphone"></i></br>STOP</button>
+          <button
+            v-if="!audio.running"
+            class="btn btn--circle"
+            @click="getUserMedia"
+          >
+            <i class="fas fa-microphone" /><br>START
+          </button>
+          <button
+            v-if="audio.running"
+            class="btn btn--circle"
+            @click="disconnectMedia"
+          >
+            <i class="fas fa-microphone" /><br>STOP
+          </button>
         </div>
         <div>
-          <button class="btn btn-primary" @click="sendToServer">送信</button>
+          <button
+            class="btn btn-primary"
+            @click="sendToServer"
+          >
+            送信
+          </button>
         </div>
       </div>
     </div>
