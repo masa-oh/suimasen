@@ -2,6 +2,12 @@
   <div class="container-fluid text-center">
     <div class="row">
       <div class="d-flex flex-column col-lg-8">
+        <audio ref="audio1">
+          <source type="audio/mp3" src="~cicadasinging.mp3"/>
+        </audio>
+        <audio ref="audio2">
+          <source type="audio/mp3" src="~izakayagaya.mp3"/>
+        </audio>
         <div id="volume-meter">
           <meter
             :value="audio.volume"
@@ -24,7 +30,7 @@
           <button
             v-if="!audio.running"
             class="btn btn--circle"
-            @click="getUserMedia"
+            @click="playMp3"
           >
             <i class="fas fa-microphone" /><br>START
           </button>
@@ -60,6 +66,8 @@
 
 <script>
 import axios from '../../plugins/axios'
+import 'cicadasinging.mp3'
+import 'izakayagaya.mp3'
 
 export default {
   name: "MicTestIndex",
@@ -76,6 +84,10 @@ export default {
         max_volume: null,
         max_frequency: null,
       },
+      audioElement1: null,
+      audioSource1: null,
+      audioElement2: null,
+      audioSource2: null,
       audioData: [],
       canvas: {
         ctx: null,
@@ -94,6 +106,36 @@ export default {
   },
   mounted() {},
   methods: {
+    playMp3() {
+      let audioContext = window.AudioContext || window.webkitAudioContext
+      // audioContextのオブジェクトを作成
+      this.audio.ctx = new audioContext({ sampleRate: 44100 })
+      // 音声データを扱うためのオブジェクトを生成
+      // BufferSizeはブラウザが自動で選ぶ(256,512,..,8192,16384)
+      this.audio.processor = this.audio.ctx.createScriptProcessor()
+      // 周波数を解析するためAnalyzerNodeオブジェクトを生成
+      this.audio.analyser = this.audio.ctx.createAnalyser()
+
+      this.audioElement1 = this.$refs.audio1;
+      this.audioSource1 = this.audio.ctx.createMediaElementSource(this.audioElement1);
+
+      this.audioElement2 = this.$refs.audio2;
+      this.audioSource2 = this.audio.ctx.createMediaElementSource(this.audioElement2);
+      this.audioSource1
+        .connect(this.audio.ctx.destination)
+      this.audioSource1
+        .connect(this.audio.analyser)
+
+      this.audioSource2
+        .connect(this.audio.ctx.destination)
+      this.audioSource2
+        .connect(this.audio.analyser)
+
+      //this.audioSource.loop = true;
+      this.audioElement1.play();
+      this.audioElement2.play();
+      this.audio.processor.onaudioprocess = this.handleOnAudioProcess
+    },
     getUserMedia() {
       console.log('getUserMedia')
       navigator.mediaDevices
