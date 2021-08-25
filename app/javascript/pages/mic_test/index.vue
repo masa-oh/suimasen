@@ -288,7 +288,7 @@ export default {
     async startGame() {
       try {
         await this.disconnectMedia(); 
-        axios.post('games')
+        axios.post('/api/games')
           .then(res => {
             this.$router.push({ name: 'GameIndex', params: { game_id: res.data.id }})
           })

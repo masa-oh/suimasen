@@ -30,8 +30,8 @@ gem 'jbuilder', '~> 2.7'
 # Reduces boot times through caching; required in config/boot.rb
 gem 'bootsnap', '>= 1.4.2', require: false
 
-gem 'pycall'
-gem 'numpy'
+gem 'aws-sdk-s3'
+gem 'google-cloud-speech', '~> 1.2', '>= 1.2.2'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
