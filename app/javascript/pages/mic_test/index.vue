@@ -6,7 +6,7 @@
           <source type="audio/mp3" src="~cicadasinging.mp3"/>
         </audio>
         <audio ref="audio2">
-          <source type="audio/mp3" src="~izakayagaya.mp3"/>
+          <source type="audio/mp3" src="~izakaya.mp3"/>
         </audio>
         <div id="volume-meter">
           <meter
@@ -67,7 +67,7 @@
 <script>
 import axios from '../../plugins/axios'
 import 'cicadasinging.mp3'
-import 'izakayagaya.mp3'
+import 'izakaya.mp3'
 
 export default {
   name: "MicTestIndex",

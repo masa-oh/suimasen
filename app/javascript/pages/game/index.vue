@@ -1,23 +1,37 @@
 <template>
   <div class="container-fluid text-center">
     <div class="row">
-      <div class="d-flex flex-column col-lg-8">
-        <audio ref="audio1">
-          <source type="audio/mp3" src="~cicadasinging.mp3"/>
-        </audio>
-        <audio ref="audio2">
-          <source type="audio/mp3" src="~izakayagaya.mp3"/>
-        </audio>
-        {{ url }}
-        <button class='btn btn-primary' @click="startMixing">（サンプル）3秒後に男性の声と居酒屋の音を合成してくれるボタン</button>
-      </div>
       <div class="d-flex flex-column justify-content-center align-items-center col-lg-4">
-        <div>
-          {{ statusText }}
-        </div>
-        <div>
-          <span>{{ finalTranscript }}</span>
-          <span class='interim-transcript'>{{ interimTranscript }}</span>
+        <div class="d-flex flex-column justify-content-center">
+          <div>
+            <div>
+              加工前：
+              <span>{{ finalTranscript }}</span>
+              <span class='interim-transcript'>{{ interimTranscript }}</span>
+            </div>
+            <audio controls :src="voiceOrigin"></audio>
+          </div>
+          <div>
+            <div>
+              認識結果（＠レストラン）：
+              <span>{{ txtResult1 }}</span>
+            </div>
+            <audio controls :src="voiceMixed1.src"></audio>
+          </div>
+          <div>
+            <div>
+              認識結果（＠居酒屋）：
+              <span>{{ txtResult2 }}</span>
+            </div>
+            <audio controls :src="voiceMixed2.src"></audio>
+          </div>
+          <div>
+            <div>
+              認識結果（＠強風）：
+              <span>{{ txtResult3 }}</span>
+            </div>
+            <audio controls :src="voiceMixed3.src"></audio>
+          </div>
         </div>
         <div id="mic_buttons">
           <button
@@ -42,16 +56,25 @@
 
 <script>
 import axios from '../../plugins/axios'
-import 'yoroshiku.mp3'
-import 'izakayagaya.mp3'
-import 'cicadasinging.mp3'
+import noise1 from 'restaurant.mp3'
+import noise2 from 'izakaya.mp3'
+import noise3 from 'windblowing.mp3'
+import noise4 from 'cicadasinging.mp3'
 
 export default {
   name: "GameIndex",
   data() {
     return {
       isRunning: false,
-      url: null,
+      voiceOrigin: '',
+      voiceMixed1: { src: '' },
+      voiceMixed2: { src: '' },
+      voiceMixed3: { src: '' },
+      srcOrigin: null,
+      srcNoise: null,
+      txtResult1: '-',
+      txtResult2: '-',
+      txtResult3: '-',
       stream: null,
       audioChunks: [],
       audioBlob: null,
@@ -96,10 +119,9 @@ export default {
       this.recognition.interimResults = true
       this.recognition.continuous = false
       this.statusText = '録音中'
-      if (this.url) {
-        let myURL = window.URL || window.webkitURL;
-        myURL.revokeObjectURL(this.url);
-        this.url = null;
+      if (this.voiceOrigin) {
+        window.URL.revokeObjectURL(this.voiceOrigin);
+        this.voiceOrigin = null;
       }
 
       // （声でなくても）音声入力を検知した時に発火する
@@ -151,10 +173,14 @@ export default {
         });
 
         // クライアントのメモリ上に作成された録音データのURLを発行する
-        let myURL = window.URL || window.webkitURL;
-        this.url = myURL.createObjectURL(this.audioBlob);
+        this.voiceOrigin = window.URL.createObjectURL(this.audioBlob);
 
-        this.judgeSuimasen();
+        await this.startMixing(noise1, this.voiceMixed1);
+        await this.startMixing(noise2, this.voiceMixed2);
+        await this.startMixing(noise3, this.voiceMixed3);
+
+        // 文字起こしAPIに送る処理（利用回数を節約するため、コメントアウト）
+        // this.judgeSuimasen();
       }
 
       this.recorder.ondataavailable = (e) => {
@@ -176,8 +202,7 @@ export default {
         this.statusText = '解析中';
 
         // クライアントのメモリ上に作成された録音データのURLを発行する
-        // let myURL = window.URL || window.webkitURL;
-        // this.url = myURL.createObjectURL(this.audioBlob);
+        // this.url = window.URL.createObjectURL(this.audioBlob);
 
         let formData = new FormData();
 
@@ -198,15 +223,27 @@ export default {
       }
     },
 
-    startMixing() {
+    async startMixing(noise, audioElement) {
+      console.log(10);
       this.ctx = new AudioContext();
       this.destination = this.ctx.createMediaStreamDestination();
-      let source1 = this.ctx.createMediaElementSource(this.$refs.audio1);
-      let source2 = this.ctx.createMediaElementSource(this.$refs.audio2);
-      source1.connect(this.destination);
-      source2.connect(this.destination);
-      this.$refs.audio1.play();
-      this.$refs.audio2.play();
+
+      let audioOrigin = document.createElement('audio');
+      audioOrigin.src = this.voiceOrigin;
+
+      let audioNoise = document.createElement('audio');
+      audioNoise.src = noise;
+
+      this.srcOrigin = this.ctx.createMediaElementSource(audioOrigin);
+      this.srcNoise = this.ctx.createMediaElementSource(audioNoise);
+
+      this.srcOrigin.connect(this.destination);
+      this.srcNoise.connect(this.destination);
+      //audioOrigin.onended = async (e) => {
+      //  await this.completeMixing(audioElement);
+      //}
+      audioOrigin.play();
+      audioNoise.play();
 
       // 録音用トラックを作成する
       this.localStream = this.destination.stream; 
@@ -214,16 +251,26 @@ export default {
       // 録音SDKで録音を開始する
       this.recorder = new MediaRecorder(this.localStream);
       this.recorder.start();
-      setTimeout(this.completeMixing, 3000);
+
+      // 録音処理が終了するのを待つ
+      await (() => {
+        return new Promise(resolve => {
+          audioOrigin.addEventListener("ended", async() => {
+            await this.completeMixing(audioElement);
+            await resolve();
+          }, { once: true });
+        });
+      })();
     },
 
-    completeMixing() {
+    completeMixing(audioElement) {
       this.recorder.stop();
       this.recorder.ondataavailable = (e) => {
-        let myURL = window.URL || window.webkitURL;
-        this.url = myURL.createObjectURL(e.data);
+        audioElement.src = window.URL.createObjectURL(e.data);
       }
-      this.localstream.getTracks()[0].stop();
+      this.srcOrigin.disconnect(this.destination);
+      this.srcNoise.disconnect(this.destination);
+      // this.localstream.getTracks()[0].stop();
     },
   },
 }
