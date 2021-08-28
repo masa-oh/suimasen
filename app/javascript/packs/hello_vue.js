@@ -11,6 +11,7 @@ import router from '../router'
 import store from '../store'
 import axios from '../plugins/axios'
 import veeValidate from '../plugins/vee_validate'
+import vuetify from '../plugins/vuetify'
 
 Vue.config.devtools = true
 Vue.config.productionTip = false
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const app = new Vue({
     router,
     store,
+    vuetify,
     render: h => h(App)
   }).$mount()
   document.body.appendChild(app.$el)
