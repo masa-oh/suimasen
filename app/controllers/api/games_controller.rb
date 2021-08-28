@@ -26,7 +26,10 @@ class Api::GamesController < ApplicationController
 
     response = speech.recognize config: config, audio: audio
 
-    result = response.results.first.alternatives[0].transcript
+    result = {
+      transcript: response.results.first.alternatives[0].transcript,
+      confidence: response.results.first.alternatives[0].confidence
+    }
 
     render json: result
   end
