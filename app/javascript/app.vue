@@ -1,28 +1,21 @@
 <template>
   <v-app>
+    <!-- ナビゲーションメニュー -->
     <v-navigation-drawer app>
-      <!-- -->
     </v-navigation-drawer>
+
+    <!-- ヘッダー -->
+    <TheHeader />
   
-    <v-app-bar app>
-      <!-- -->
-      <TheHeader />
-    </v-app-bar>
-  
-    <!-- アプリケーションのコンポーネントに基づいてコンテンツのサイズを決定 -->
+    <!-- メインコンテンツ -->
     <v-main>
-  
-      <!-- アプリケーションに適切なgutterを提供します -->
       <v-container fluid>
-  
         <router-view />
       </v-container>
     </v-main>
   
-    <v-footer app>
-      <!-- -->
-      <TheFooter />
-    </v-footer>
+    <!-- フッター -->
+    <TheFooter />
   </v-app>
 </template>
 
