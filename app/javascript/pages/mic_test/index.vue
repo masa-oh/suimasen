@@ -2,26 +2,62 @@
   <div class="container-fluid text-center">
     <div class="row">
       <div class="d-flex flex-column col-lg-8">
+        <audio ref="audio1">
+          <source type="audio/mp3" src="~cicadasinging.mp3"/>
+        </audio>
+        <audio ref="audio2">
+          <source type="audio/mp3" src="~izakaya.mp3"/>
+        </audio>
         <div id="volume-meter">
-          <meter :value="audio.volume" min="-96" max="0" high="-40"></meter> <span>{{ audio.volume }}</span>
+          <meter
+            :value="audio.volume"
+            min="-96"
+            max="0"
+            high="-40"
+          /> <span>{{ audio.volume }}</span>
         </div>
         <div id="canvas-container">
-          <canvas id="canvas" ref="canvas" :width="canvas.width" :height="canvas.height"></canvas>
+          <canvas
+            id="canvas"
+            ref="canvas"
+            :width="canvas.width"
+            :height="canvas.height"
+          />
         </div>
       </div>
       <div class="d-flex flex-column justify-content-center align-items-center col-lg-4">
         <div id="mic_buttons">
-          <button v-if="!audio.running" @click="getUserMedia" class="btn btn--circle"><i class="fas fa-microphone"></i></br>START</button>
-          <button v-if="audio.running" @click="disconnectMedia" class="btn btn--circle"><i class="fas fa-microphone"></i></br>STOP</button>
+          <button
+            v-if="!audio.running"
+            class="btn btn--circle"
+            @click="playMp3"
+          >
+            <i class="fas fa-microphone" /><br>START
+          </button>
+          <button
+            v-if="audio.running"
+            class="btn btn--circle"
+            @click="disconnectMedia"
+          >
+            <i class="fas fa-microphone" /><br>STOP
+          </button>
         </div>
         <div class>
-          <input type="checkbox" id="checkbox" v-model="checked">
+          <input
+            id="checkbox"
+            v-model="checked"
+            type="checkbox"
+          >
           <label for="checkbox">テスト完了！</label>
         </div>
         <div>
-          <router-link :to="{ name: 'GameIndex' }">
-            <button class="btn btn-primary" :disabled="!checked" @click="disconnectMedia">ゲーム開始</button>
-          </router-link>
+          <button
+            class="btn btn-primary"
+            :disabled="!checked"
+            @click="startGame"
+          >
+            ゲーム開始
+          </button>
         </div>
       </div>
     </div>
@@ -30,6 +66,8 @@
 
 <script>
 import axios from '../../plugins/axios'
+import 'cicadasinging.mp3'
+import 'izakaya.mp3'
 
 export default {
   name: "MicTestIndex",
@@ -46,6 +84,10 @@ export default {
         max_volume: null,
         max_frequency: null,
       },
+      audioElement1: null,
+      audioSource1: null,
+      audioElement2: null,
+      audioSource2: null,
       audioData: [],
       canvas: {
         ctx: null,
@@ -64,6 +106,36 @@ export default {
   },
   mounted() {},
   methods: {
+    playMp3() {
+      let audioContext = window.AudioContext || window.webkitAudioContext
+      // audioContextのオブジェクトを作成
+      this.audio.ctx = new audioContext({ sampleRate: 44100 })
+      // 音声データを扱うためのオブジェクトを生成
+      // BufferSizeはブラウザが自動で選ぶ(256,512,..,8192,16384)
+      this.audio.processor = this.audio.ctx.createScriptProcessor()
+      // 周波数を解析するためAnalyzerNodeオブジェクトを生成
+      this.audio.analyser = this.audio.ctx.createAnalyser()
+
+      this.audioElement1 = this.$refs.audio1;
+      this.audioSource1 = this.audio.ctx.createMediaElementSource(this.audioElement1);
+
+      this.audioElement2 = this.$refs.audio2;
+      this.audioSource2 = this.audio.ctx.createMediaElementSource(this.audioElement2);
+      this.audioSource1
+        .connect(this.audio.ctx.destination)
+      this.audioSource1
+        .connect(this.audio.analyser)
+
+      this.audioSource2
+        .connect(this.audio.ctx.destination)
+      this.audioSource2
+        .connect(this.audio.analyser)
+
+      //this.audioSource.loop = true;
+      this.audioElement1.play();
+      this.audioElement2.play();
+      this.audio.processor.onaudioprocess = this.handleOnAudioProcess
+    },
     getUserMedia() {
       console.log('getUserMedia')
       navigator.mediaDevices
@@ -201,17 +273,28 @@ export default {
     },
 
     disconnectMedia() {
-      // this.audioCtx.close()
-      // Object.assign(this.$data, this.$options.data()) 
-      this.audio.mic.disconnect(this.audio.processor)
-      this.audio.processor.disconnect(this.audio.ctx.destination)
-      this.audio.mic.disconnect(this.audio.analyser)
+      if (this.audio.running == true) {
+        // this.audioCtx.close()
+        // Object.assign(this.$data, this.$options.data()) 
+        this.audio.mic.disconnect(this.audio.processor)
+        this.audio.processor.disconnect(this.audio.ctx.destination)
+        this.audio.mic.disconnect(this.audio.analyser)
 
-      this.audio.processor.onaudioprocess = null
-      this.audio.running = false
-      
-      // axios.get('games', )
-      //  .then(res =>)
+        this.audio.processor.onaudioprocess = null
+        this.audio.running = false
+      }
+    },
+
+    async startGame() {
+      try {
+        await this.disconnectMedia(); 
+        axios.post('/api/games')
+          .then(res => {
+            this.$router.push({ name: 'GameIndex', params: { game_id: res.data.id }})
+          })
+      } catch (error) {
+        console.log(error);
+      }
     }
   },
 }

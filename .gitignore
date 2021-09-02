@@ -40,3 +40,4 @@ yarn-debug.log*
 config/database.yml
 .DS_Store
 *.swp
+gcp_key.json

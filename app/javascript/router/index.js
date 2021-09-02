@@ -21,7 +21,7 @@ const router = new Router({
       name: "MicTestIndex",
     },
     { 
-      path: '/games',
+      path: '/games/:game_id',
       component: GameIndex,
       name: "GameIndex",
     },

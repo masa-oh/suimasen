@@ -1,9 +1,22 @@
 <template>
-  <div class="d-flex flex-column min-vh-100">
-    <TheHeader />
-    <router-view />
+  <v-app :style="{ background: $vuetify.theme.themes.light.background }">
+    <!-- ナビゲーションメニュー -->
+    <v-navigation-drawer app v-model="drawer">
+    </v-navigation-drawer>
+
+    <!-- ヘッダー -->
+    <TheHeader @change-drawer="changeDrawer" />
+  
+    <!-- メインコンテンツ -->
+    <v-main>
+      <v-container fluid>
+        <router-view />
+      </v-container>
+    </v-main>
+  
+    <!-- フッター -->
     <TheFooter />
-  </div>
+  </v-app>
 </template>
 
 <script>
@@ -14,6 +27,16 @@ export default {
   components: {
     TheHeader,
     TheFooter,
+  },
+  data() {
+    return {
+      drawer: false,
+    }
+  },
+  methods: {
+    changeDrawer() {
+      this.drawer = !this.drawer;
+    }
   }
 }
 </script>

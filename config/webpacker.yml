@@ -11,7 +11,7 @@ default: &default
 
   # Additional paths webpack should lookup modules
   # ['app/assets', 'engine/foo/app/assets']
-  resolved_paths: []
+  resolved_paths: ['app/assets/audios', 'app/assets/images']
 
   # Reload manifest.json on all requests so we reload latest compiled packs
   cache_manifest: false
@@ -32,6 +32,7 @@ default: &default
     - .ttf
     - .woff
     - .woff2
+    - .mp3
 
   extensions:
     - .vue
