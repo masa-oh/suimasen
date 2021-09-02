@@ -1,23 +1,56 @@
 <template>
   <div class="container-fluid text-center">
     <div class="row">
-      <div class="d-flex flex-column col-lg-8">
-        <div v-if="result">
-          <span>録音時間：{{ result.total_length }}秒</span><br/>
-          <span>発声認識時間：{{ result.valid_length }}秒</span><br/>
-          <span>周波数領域：{{ result.min_freq }}Hz〜{{ result.max_freq }}Hz</span>
-        </div>
-        <div v-if="recordfailed">
-          <span>声が認識できませんでした</span>
-        </div>
-      </div>
       <div class="d-flex flex-column justify-content-center align-items-center col-lg-4">
-        <div id="mic_buttons">
-          <button v-if="!audio.running" @click="getUserMedia" class="btn btn--circle"><i class="fas fa-microphone"></i></br>START</button>
-          <button v-if="audio.running" @click="disconnectMedia" class="btn btn--circle"><i class="fas fa-microphone"></i></br>STOP</button>
+        <div class="d-flex flex-column justify-content-center">
+          <div>
+            <div>
+              加工前：
+              <span>{{ finalTranscript }}</span>
+              <span class='interim-transcript'>{{ interimTranscript }}</span>
+            </div>
+            <audio controls :src="voiceOriginUrl"></audio>
+          </div>
+          <div>
+            <div>
+              Case 1. レストラン<br>
+              認識結果：<span>{{ result1.text }}</span><br>
+              得点：<span>{{ Math.round(result1.confidence * 100) }}</span>
+            </div>
+            <audio controls :src="voiceMixed1.url"></audio>
+          </div>
+          <div>
+            <div>
+              Case 2. 居酒屋<br>
+              認識結果：<span>{{ result2.text }}</span><br>
+              得点：<span>{{ Math.round(result2.confidence * 100) }}</span>
+            </div>
+            <audio controls :src="voiceMixed2.url"></audio>
+          </div>
+          <div>
+            <div>
+              Case 3. 強風の中<br>
+              認識結果：<span>{{ result3.text }}</span><br>
+              得点：<span>{{ Math.round(result3.confidence * 100) }}</span>
+            </div>
+            <audio controls :src="voiceMixed3.url"></audio>
+          </div>
         </div>
-        <div>
-          <button class="btn btn-primary" @click="sendToServer">送信</button>
+        <div id="mic_buttons">
+          <button
+            v-if="!isRunning"
+            class="btn btn--circle"
+            @click="startListening"
+          >
+            <i class="fas fa-microphone" /><br>測定開始
+          </button>
+          <button
+            v-if="isRunning"
+            class="btn btn--circle"
+            @click="abortListening"
+          >
+            <i class="fas fa-microphone" /><br>測定中止
+          </button>
         </div>
       </div>
     </div>
@@ -26,185 +59,275 @@
 
 <script>
 import axios from '../../plugins/axios'
+import noise1 from 'restaurant.mp3'
+import noise2 from 'izakaya.mp3'
+import noise3 from 'windblowing.mp3'
+import noise4 from 'cicadasinging.mp3'
 
 export default {
   name: "GameIndex",
   data() {
     return {
-      audio: {
-        ctx: null,
-        analyser: null,
-        mic: null,
-        running: false,
-        range: null,
-        fsDivN: null,
-        n440Hz: null,
-        spectrums: null,
-      },
-      audioData: [],
-      interval: 100,
-      timeoutID: null,
-      intervalID: null,
-      result: null,
-      recordfailed: false,
+      isRunning: false,
+      voiceOriginUrl: '',
+      voiceMixed1: { url: '' },
+      voiceMixed2: { url: '' },
+      voiceMixed3: { url: '' },
+      srcOrigin: null,
+      srcNoise: null,
+      result1: { text: '-', confidence: null },
+      result2: { text: '-', confidence: null },
+      result3: { text: '-', confidence: null },
+      stream: null,
+      localStream: null,
+      audioChunks: [],
+      audioBlob: null,
+      recorder: null,
+      recognition: null,
+      ctx: null,
+      destination: null,
+      gain: null,
+      statusText: 'ボタンを押して測定開始',
+      finalTranscript: '', // 確定した認識結果
+      interimTranscript: '', // 暫定の認識結果
     }
   },
-  computed: {
-    validAudioData() {
-      return this.audioData.filter((item) => {
-        return item.length > 1;
-      });
-    },
-  },
+  mounted() {},
   methods: {
-    getUserMedia() {
+    startListening() {
       console.log('getUserMedia')
-      this.audioData=[];
       navigator.mediaDevices
-        .getUserMedia({ audio: true, video: false })
+        .getUserMedia({ audio: {
+          echoCancellation: true,
+          echoCancellationType: 'system',
+          noiseSuppression: false
+        }})
         .then(stream => {
-          this.getLocalMediaStream(stream)
-          this.audio.running = true
-          // イベントハンドラー
-          this.timeoutID = window.setTimeout(this.disconnectMedia, 5000)
-          this.analyseData();
+          this.isRunning = true;
+          this.finalTranscript = '';
+          this.interimTranscript = '';
+          this.stream = stream
+          // 録音APIの準備
+          this.recorder = new MediaRecorder(stream);
+          // 音声認識を開始
+          this.startSpeechRecognition(stream);
         }).catch(error => {
           console.error('mediaDevices.getUserMedia() error:', error)
         })
     },
 
-    getLocalMediaStream(mediaStream) {
-      // AudioContextの利用宣言（クロスブラウザー対応）
-      let audioContext = window.AudioContext || window.webkitAudioContext
-      // audioContextのオブジェクトを作成
-      this.audio.ctx = new audioContext({ sampleRate: 44100 })
-      // 周波数を解析するためAnalyzerNodeオブジェクトを生成
-      this.audio.analyser = this.audio.ctx.createAnalyser()
-      // audioContextで音声ストリームを扱えるようにする
-      this.audio.mic = this.audio.ctx.createMediaStreamSource(mediaStream)
-      // それぞれをconnectで接続し、ストリームの音声データを扱えるようにする
-      // mic (Input) -> AnalyserNode (Output)
-      this.audio.mic.connect(this.audio.analyser)
-    },
+    // Web Speech APIでリアルタイムに文字起こしを行う
+    startSpeechRecognition(stream) {
+      this.recognition = new webkitSpeechRecognition(stream);
+      this.recognition.lang = 'ja'
+      this.recognition.interimResults = true
+      this.recognition.continuous = false
+      this.statusText = '録音中'
+      if (this.voiceOriginUrl) {
+        window.URL.revokeObjectURL(this.voiceOriginUrl);
+        this.voiceOriginUrl = null;
+      }
 
-    analyseData() {
-      this.audio.analyser.fftSize = 4096;
-      this.audio.analyser.maxDecibels = 0;
-      this.audio.analyser.minDecibels = -100;
+      // （声でなくても）音声入力を検知した時に発火する
+      this.recognition.onaudiostart = () => {
+        // MediaRecorderで録音を開始する
+        this.startRecording();
+      }
 
-      this.audio.range = this.audio.analyser.maxDecibels - this.audio.analyser.minDecibels;
-      // Frequency resolution
-      this.audio.fsDivN = this.audio.ctx.sampleRate / this.audio.analyser.fftSize;
-      // This value is the number of samples during 440 Hz
-      this.audio.n440Hz = Math.floor(440 / this.audio.fsDivN);
-      this.audio.fundamentalTones = [];
-      this.audio.overtones = [];
-      this.result = null;
-      this.recordfailed = false;
-
-      this.intervalID = setInterval(this.executeFFT, this.interval);
-    },
-
-    async executeFFT() {
-      // Get data for drawing spectrum (dB)
-      this.audio.spectrums = new Float32Array(this.audio.analyser.frequencyBinCount);  // Array size is a half of fftSize
-      this.audio.analyser.getFloatFrequencyData(this.audio.spectrums);
-
-      // 一番音量が大きい周波数を基音とする
-      let fundamentalTone = await this.getFundamentalTone();
-      // 基音の整数次倍音のデータを取る
-      let overtones = await this.getOvertones(fundamentalTone);
-      // 基音と倍音をまとめて配列に入れる
-      this.audioData.push([fundamentalTone].concat(overtones));
-      this.logger();
-    },
-
-    logger() {
-      // for debug
-      console.log(`audioContext.sampleRate: ${this.audio.ctx.sampleRate}, analyserNode.fftSize: ${this.audio.analyser.fftSize}, fsDivN: ${this.audio.fsDivN},  n440Hz: ${this.audio.n440Hz}, spectrums.length: ${this.audio.spectrums.length}, analyserNode.frequencybinCount: ${this.audio.analyser.frequencyBinCount}`);
-    },
-
-    getFundamentalTone() {
-      let fundamentalTone = {
-        times: 1,
-        volume: -100,
-        index: 0,
-        frequency: 0,
-      };
-      // spectrumには(fsDivN * fftSize/2)Hzまでの音量データが入っているが、高周波帯は不要なため、適当な長さで処理を中断
-      for (let i = 0, len = this.audio.spectrums.length / 4; i < len; i++) {
-        if (fundamentalTone.volume < this.audio.spectrums[i]) {
-          fundamentalTone.volume = this.audio.spectrums[i].toFixed(2);
-          fundamentalTone.index = i;
-          fundamentalTone.frequency = (i * this.audio.fsDivN).toFixed(2);
-        }
-      };
-      return fundamentalTone;
-    },
-
-    getOvertones(fundamentalTone) {
-      let overtones=[]
-      if (fundamentalTone.frequency > 0.2*1000 && fundamentalTone.frequency < 4*1000 && fundamentalTone.volume > -70) {
-        for (let i = fundamentalTone.index * 2, len = this.audio.spectrums.length / 4; i < len; i += fundamentalTone.index) {
-          let overtone = {
-            times: i / fundamentalTone.index,
-            volume: this.audio.spectrums[i].toFixed(2),
-            index: i,
-            frequency: (i * this.audio.fsDivN).toFixed(2),
-          };
-          overtones.push(overtone);
+      // 音声入力の終了を検知後、音声の認識に成功すると発火する
+      this.recognition.onresult = (e) => {
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          let transcript = e.results[i][0].transcript;
+          if (e.results[i].isFinal) {
+            this.interimTranscript = '';
+            this.finalTranscript += transcript;
+            this.stopSpeechRecognition();
+            this.stopRecording();
+          } else {
+            this.interimTranscript = transcript;
+          }
         }
       }
-      return overtones;
+
+      // 文字起こし開始
+      this.recognition.start();
     },
 
-    disconnectMedia() {
-      if (this.audio.running == true) {
-        this.audio.mic.disconnect(this.audio.analyser);
-        this.audio.running = false;
-        clearTimeout(this.timeoutID);
-        clearInterval(this.intervalID);
-        this.displayResult();
+    // Web Speech APIの処理を終了する
+    stopSpeechRecognition() {
+      if (!this.isRunning) return;
+      this.recognition.stop();
+      this.isRunning = false;
+    },
+
+    // Web Speech APIの処理を中断する
+    abortListening() {
+      this.recognition.abort();
+      this.recorder.stop();
+      this.isRunning = false;
+    },
+
+    // MediaRecorderで録音を開始する
+    startRecording() {
+      this.recorder.ondataavailable = async (e) => {
+        // クライアントのメモリ上に作成された録音データのURLを発行する
+        this.voiceOriginUrl = await window.URL.createObjectURL(e.data);
+        await this.startMixing(noise1, this.voiceMixed1)
+
+        // 節約のため、エラー解消するまでコメントアウト
+        //await this.judgeSuimasen();
+        await this.startMixing(noise2, this.voiceMixed2)
+          .then(() => {
+            //this.judgeSuimasen();
+          });
+        await this.startMixing(noise3, this.voiceMixed3);
       }
-      // axios.get('games', )
-      //  .then(res =>)
+ 
+      this.recorder.start();
     },
 
-    async displayResult() {
-      if (this.validAudioData.length > 0) {
-        this.result = await this.calcResult();
-      } else {
-        this.result = null;
-        this.recordfailed = true;
-      };
+    // MediaRecorderで録音を終了する
+    stopRecording() {
+      this.recorder.stop();
+      this.stream.getTracks()[0].stop();
     },
 
-    calcResult() {
-      let result = {
-        total_length: (this.audioData.length * this.interval / 1000).toFixed(2),
-        valid_length: (this.validAudioData.length * this.interval / 1000).toFixed(2),
-        min_freq:
-          this.validAudioData.reduce((acc,item) => {
-            return Math.min(acc, item[0].frequency)
-          }, this.validAudioData[0][0].frequency),
-        max_freq:
-          this.validAudioData.reduce((acc,item) => {
-            return Math.max(acc, item[0].frequency)
-          }, this.validAudioData[0][0].frequency),
-      }
-      return result
-    },
+    async judgeSuimasen() {
+      if (/すいません|すみません/.test(this.finalTranscript)) {
+        // 録音した音声を環境音と重ねてサーバーに送る処理
+        this.statusText = '解析中';
 
-    sendToServer() {
-      let formData = new FormData();
-      let spectrums = JSON.stringify(this.audioData[0]);
-      formData.append('spectrums', spectrums);
-      let config = {headers: {'content-type': 'multipart/form-data'}};
-      axios.post('games', formData, config)
-        .then(res => {
-          console.log(res.data)
+        // クライアントのメモリ上に作成された録音データのURLを発行する
+        // this.url = window.URL.createObjectURL(this.audioBlob);
+
+        let formData = new FormData();
+
+        await this.waitAudioChunks();
+
+        this.audioBlob = new Blob(this.audioChunks, {
+            'type' : `${this.recorder.mimeType}`
         });
-    }
+        console.log('2ばんめ');
+
+        formData.append('voice', this.audioBlob);
+
+        let config = {
+          headers: {
+            'content-type': 'multipart/form-data'
+          }
+        };
+
+        await axios.post(`/api/games/${this.$route.params.game_id}/transcribe`, formData, config)
+          .then(res => {
+            console.log(res.data)
+            this.result1.text = res.data.transcript
+            this.result1.confidence = res.data.confidence
+          }).catch(err => {
+            console.log(err)
+          })
+      } else {
+        this.statusText = 'もう一度やり直してください';
+      }
+    },
+
+    async startMixing(noiseFile, audioElement) {
+      console.log("startMixing");
+      // Audioの出力先を作る
+      this.ctx = new AudioContext();
+      this.destination = this.ctx.createMediaStreamDestination();
+
+      // 入力チャネルが複数あるので、ステレオからモノラルへのダウンミックスを行う
+      this.destination.channelCount = 1;
+
+      // 仮想のaudio要素を作り、src属性に録音した音声データを持たせる
+      let audioOrigin = document.createElement('audio');
+      audioOrigin.src = this.voiceOriginUrl;
+
+      // 仮想のaudio要素を作り、src属性に環境音データを持たせる
+      let audioNoise = document.createElement('audio');
+      audioNoise.src = noiseFile;
+
+      // それぞれのMediaSourceを作成する
+      this.srcOrigin = this.ctx.createMediaElementSource(audioOrigin);
+      this.srcNoise = this.ctx.createMediaElementSource(audioNoise);
+
+      // 音声はボリュームを小さくするフィルターを通す（gain.valueは最小が0、最大(デフォルト)が1）
+      this.gain = this.ctx.createGain();
+      this.gain.gain.value = 0.5;
+
+      // 作成したMediaSourceに、両方とも同じ出力先を設定する
+      this.srcOrigin.connect(this.gain).connect(this.destination);
+      this.srcNoise.connect(this.destination);
+
+      // メモ：ここでended発火時の処理を定義した場合、後続処理で再度startMixingが呼ばれた時に、
+      // 　　　前のcompleteMixingが完了しておらずエラーとなる
+      // audioOrigin.onended = async (e) => {
+      //   await this.completeMixing(audioElement);
+      // }
+
+      // 仮想audio要素の音を再生する
+      audioOrigin.play();
+      audioNoise.play();
+
+      // 録音用MediaStreamを作成する
+      this.localStream = this.destination.stream;
+
+      // MediaRecorderで録音を開始する
+      this.recorder = new MediaRecorder(this.localStream);
+      this.startMixRecording();
+
+      // 録音処理が終了するのを待つ
+      await (() => {
+        return new Promise(resolve => {
+          audioOrigin.addEventListener("ended", async () => {
+            await this.completeMixing(audioElement);
+            await resolve();
+          }, { once: true });
+        });
+      })();
+
+      // 録音データを文字起こしAPIに送る（利用回数を節約するため、コメントアウト）
+      // this.judgeSuimasen();
+    },
+
+    completeMixing(audioElement) {
+      this.recorder.ondataavailable = (e) => {
+        this.audioChunks = [];
+        this.audioChunks.push(e.data);
+        console.log('1ばんめ');
+        audioElement.url = window.URL.createObjectURL(e.data);
+      }
+      this.recorder.stop();
+      this.srcOrigin.disconnect(this.gain);
+      this.gain.disconnect(this.destination);
+      this.srcNoise.disconnect(this.destination);
+      // this.localstream.getTracks()[0].stop();
+    },
+
+    // MediaRecorderで録音を開始し、Blobを用意する
+    startMixRecording() {
+      // this.recorder.onstop = async (e) => {
+      //   this.audioBlob = await new Blob(this.audioChunks, {
+      //     'type' : `${this.recorder.mimeType}`
+      //   });
+      // }
+
+      this.recorder.start();
+    },
+
+    async waitAudioChunks() {
+      return new Promise(resolve => {
+        const intervalId = setInterval(() => {
+          if (!this.audioChunks.length) {
+            console.log(1);
+            return;
+          } else {
+            clearInterval(intervalId);
+            resolve();
+          }
+        }, 100)
+      });
+    },
   },
 }
 </script>
@@ -226,20 +349,6 @@ html {
 body {
   background-color: #D8E3E7;
 }
-
-#canvas-container{
-    position: relative;
-    height: 0;
-    overflow: hidden;
-    padding-top: 56.25%;
-}
-  #canvas{
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-  }
 
 button.btn--circle {
   font-size: 1.6rem;
@@ -269,5 +378,9 @@ button.btn--circle:active {
   color: #fff;
   -webkit-box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.interim-transcript {
+  font-style: italic;
 }
 </style>
