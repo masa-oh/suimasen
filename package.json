@@ -8,6 +8,8 @@
     "@rails/ujs": "^6.0.0",
     "@rails/webpacker": "4.2.2",
     "axios": "^0.21.1",
+    "sass": "^1.39.0",
+    "sass-loader": "10.1.1",
     "turbolinks": "^5.2.0",
     "vee-validate": "^3.4.10",
     "vue": "^2.6.11",
