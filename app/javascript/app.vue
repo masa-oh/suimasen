@@ -1,17 +1,11 @@
 <template>
   <v-app :style="{ background: $vuetify.theme.themes.light.background }">
-    <!-- ナビゲーションメニュー -->
-    <v-navigation-drawer app v-model="drawer">
-    </v-navigation-drawer>
-
     <!-- ヘッダー -->
-    <TheHeader @change-drawer="changeDrawer" />
+    <TheHeader />
   
     <!-- メインコンテンツ -->
     <v-main>
-      <v-container fluid>
-        <router-view />
-      </v-container>
+      <router-view />
     </v-main>
   
     <!-- フッター -->
@@ -28,18 +22,24 @@ export default {
     TheHeader,
     TheFooter,
   },
-  data() {
-    return {
-      drawer: false,
+  computed: {
+    isTopPage() {
+      return this.$route.path === "/"
     }
   },
-  methods: {
-    changeDrawer() {
-      this.drawer = !this.drawer;
-    }
-  }
 }
 </script>
 
 <style scoped>
+.v-application--wrap {
+  background-color: #e9f1f5;
+}
+.container.main-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.main-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
 </style>
