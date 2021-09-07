@@ -15,7 +15,7 @@
             <v-btn
                 class="mb-8"
                 color="primary"
-                :to="{ name: 'MicTestIndex' }"
+                :to="{ name: 'GameIndex' }"
                 x-large
                 dark
             >

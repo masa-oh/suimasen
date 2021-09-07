@@ -30,7 +30,7 @@
           <button
             v-if="!audio.running"
             class="btn btn--circle"
-            @click="playMp3"
+            @click="getUserMedia"
           >
             <i class="fas fa-microphone" /><br>START
           </button>
@@ -51,13 +51,12 @@
           <label for="checkbox">テスト完了！</label>
         </div>
         <div>
-          <button
-            class="btn btn-primary"
+          <v-btn
             :disabled="!checked"
             @click="startGame"
           >
             ゲーム開始
-          </button>
+          </v-btn>
         </div>
       </div>
     </div>

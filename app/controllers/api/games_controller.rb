@@ -1,6 +1,8 @@
 class Api::GamesController < ApplicationController
   def index; end
 
+  def new; end
+
   def create
     game = Game.new
 
