@@ -1,13 +1,15 @@
 <template>
-  <v-app :style="{ background: $vuetify.theme.themes.light.background }">
+  <v-app style="background: linear-gradient(128deg, #EE7C5895, #D8E3E7, #55a2b7);">
     <!-- ヘッダー -->
     <TheHeader />
-  
+
     <!-- メインコンテンツ -->
     <v-main>
-      <router-view />
+      <transition mode="out-in">
+        <router-view />
+      </transition>
     </v-main>
-  
+
     <!-- フッター -->
     <TheFooter />
   </v-app>
@@ -41,5 +43,11 @@ export default {
 .main-content {
   max-width: 900px;
   margin: 0 auto;
+}
+.v-enter-active, .v-leave-active {
+  transition: opacity .5s;
+}
+.v-enter, .v-leave-to {
+  opacity: 0;
 }
 </style>

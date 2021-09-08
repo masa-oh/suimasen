@@ -1,60 +1,93 @@
 <template>
-  <div class="container-fluid text-center">
-    <div class="row">
-      <div class="d-flex flex-column justify-content-center align-items-center col-lg-4">
-        <div class="d-flex flex-column justify-content-center">
-          <div>
-            <div>
-              加工前：
-              <span>{{ finalTranscript }}</span>
-              <span class='interim-transcript'>{{ interimTranscript }}</span>
-            </div>
-            <audio controls :src="voiceOriginUrl"></audio>
-          </div>
-          <div>
-            <div>
-              Case 1. レストラン<br>
-              認識結果：<span>{{ result1.text }}</span><br>
-              得点：<span>{{ Math.round(result1.confidence * 100) }}</span>
-            </div>
-            <audio controls :src="voiceMixed1.url"></audio>
-          </div>
-          <div>
-            <div>
-              Case 2. 居酒屋<br>
-              認識結果：<span>{{ result2.text }}</span><br>
-              得点：<span>{{ Math.round(result2.confidence * 100) }}</span>
-            </div>
-            <audio controls :src="voiceMixed2.url"></audio>
-          </div>
-          <div>
-            <div>
-              Case 3. 強風の中<br>
-              認識結果：<span>{{ result3.text }}</span><br>
-              得点：<span>{{ Math.round(result3.confidence * 100) }}</span>
-            </div>
-            <audio controls :src="voiceMixed3.url"></audio>
-          </div>
-        </div>
-        <div id="mic_buttons">
-          <button
-            v-if="!isRunning"
-            class="btn btn--circle"
+  <v-container fill-height fluid>
+    <v-row align-content="center" justify="center">
+      <v-spacer />
+      <v-col cols="8">
+        <v-img height="350" :src="src_restaurant" style="border-radius:5px;">
+          <template v-slot:placeholder>
+            <v-row
+              class="fill-height ma-0"
+              align="center"
+              justify="center"
+            >
+              <v-progress-circular
+                indeterminate
+                color="grey lighten-5"
+              ></v-progress-circular>
+            </v-row>
+          </template>
+        </v-img>
+        <div class="text-center">
+          <v-divider class="my-4" />
+
+          <strong>Stage 1. レストラン</strong>
+          <v-fade-transition leave-absolute>
+            <p>{{ statusText }}</p>
+          </v-fade-transition>
+
+          <v-divider class="my-4" />
+
+          <v-btn
+            :loading="isRunning"
+            :disabled="isRunning"
+            id="custom-disabled"
+            class="mx-2"
+            fab
+            dark
+            x-large
+            color="primary lighten-1"
             @click="startListening"
           >
-            <i class="fas fa-microphone" /><br>測定開始
-          </button>
-          <button
-            v-if="isRunning"
-            class="btn btn--circle"
-            @click="abortListening"
-          >
-            <i class="fas fa-microphone" /><br>測定中止
-          </button>
+            <v-icon dark>fas fa-microphone</v-icon>
+          </v-btn>
+          <p class="mt-4">
+            <span>{{ finalTranscript }}</span>
+            <span class="interim-transcript">{{ interimTranscript }}</span><br/>
+          </p>
         </div>
-      </div>
-    </div>
-  </div>
+      </v-col>
+      <v-spacer />
+    </v-row>
+    <v-row align-content="center">
+      <v-spacer />
+      <v-col class="align-self-center" cols="10">
+        <!-- 結果を描画 -->
+        <div v-if="isJudged" id="result">
+          <div>
+            <p class="text-h2">
+              {{ resultMessage.summary }}
+            </p>
+            <p class="mb-12 d-sm-block" v-html="resultMessage.description.replace(/\n/g, '<br/>')" />
+            <p class="mb-12 d-sm-block">
+              場面：{{ situation }}<br>
+              認識結果：<span>{{ result.transcript }}</span><br>
+              得点：<span>{{ score }}</span>
+            </p>
+            <div>
+              元のすいません：
+              <audio controls :src="voiceOrigin.url"></audio>
+            </div>
+            <div>
+              {{ situation }}でのすいません：
+              <audio controls :src="voiceMixed.url"></audio>
+            </div>
+          </div>
+          <div>
+            <p class="text-h2">
+              声を大きくしたいですか？
+            </p>
+            <p class="mb-12 d-sm-block">
+              声はトレーニングによって改善できます。
+              こちらを実践して再チャレンジしよう！
+            </p>
+            <div>
+              <!-- サーバーのバッチジョブで取得したYoutube動画を埋め込み -->
+            </div>
+          </div>
+        </div>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -63,21 +96,22 @@ import noise1 from 'restaurant.mp3'
 import noise2 from 'izakaya.mp3'
 import noise3 from 'windblowing.mp3'
 import noise4 from 'cicadasinging.mp3'
+import 'hamburger_restaurant.jpg'
 
 export default {
   name: "GameIndex",
   data() {
     return {
+      src_restaurant: require("hamburger_restaurant.jpg"),
+      loader: null,
       isRunning: false,
-      voiceOriginUrl: '',
-      voiceMixed1: { url: '' },
-      voiceMixed2: { url: '' },
-      voiceMixed3: { url: '' },
+      voiceOrigin: { url: '' },
+      voiceMixed: { url: '' },
       srcOrigin: null,
       srcNoise: null,
-      result1: { text: '-', confidence: null },
-      result2: { text: '-', confidence: null },
-      result3: { text: '-', confidence: null },
+      situation: "レストラン",
+      result: { transcript: '', confidence: null },
+      isJudged: false,
       stream: null,
       localStream: null,
       audioChunks: [],
@@ -88,9 +122,33 @@ export default {
       destination: null,
       gain: null,
       statusText: 'ボタンを押して測定開始',
+      pattern: /すいません|すみません/,
       finalTranscript: '', // 確定した認識結果
       interimTranscript: '', // 暫定の認識結果
     }
+  },
+  computed: {
+    score() {
+      return (this.pattern.test(this.result.transcript) ? Math.round(this.result.confidence * 100) : 0);
+    },
+    resultMessage() {
+      if (this.score > 80) {
+        return {
+          summary: "Excellent!",
+          description: "理想的なすいませんです。\n率先して店員さんを呼びましょう。"
+        }
+      } else if (this.score > 60) {
+        return {
+          summary: "Good!",
+          description: "なかなかいい線ですね。\n練習してさらなる高みを目指しましょう。"
+        }
+      } else {
+        return {
+          summary: "Not Good...",
+          description: "店員さんを呼ぶのは諦めて、\n呼び鈴のあるお店を選びましょう。"
+        }
+      }
+    },
   },
   mounted() {},
   methods: {
@@ -123,9 +181,9 @@ export default {
       this.recognition.interimResults = true
       this.recognition.continuous = false
       this.statusText = '録音中'
-      if (this.voiceOriginUrl) {
-        window.URL.revokeObjectURL(this.voiceOriginUrl);
-        this.voiceOriginUrl = null;
+      if (this.voiceOrigin.url) {
+        window.URL.revokeObjectURL(this.voiceOrigin.url);
+        this.voiceOrigin.url = null;
       }
 
       // （声でなくても）音声入力を検知した時に発火する
@@ -142,6 +200,7 @@ export default {
             this.interimTranscript = '';
             this.finalTranscript += transcript;
             this.stopSpeechRecognition();
+            this.statusText = '解析中';
             this.stopRecording();
           } else {
             this.interimTranscript = transcript;
@@ -171,16 +230,13 @@ export default {
     startRecording() {
       this.recorder.ondataavailable = async (e) => {
         // クライアントのメモリ上に作成された録音データのURLを発行する
-        this.voiceOriginUrl = await window.URL.createObjectURL(e.data);
-        await this.startMixing(noise1, this.voiceMixed1)
-
-        // 節約のため、エラー解消するまでコメントアウト
-        //await this.judgeSuimasen();
-        await this.startMixing(noise2, this.voiceMixed2)
+        this.voiceOrigin.url = await window.URL.createObjectURL(e.data);
+        // 録音した声と環境音を重ねる
+        await this.startMixing(noise1, this.voiceMixed)
           .then(() => {
+            // 節約のため、エラー解消するまでコメントアウト
             //this.judgeSuimasen();
           });
-        await this.startMixing(noise3, this.voiceMixed3);
       }
  
       this.recorder.start();
@@ -193,7 +249,8 @@ export default {
     },
 
     async judgeSuimasen() {
-      if (/すいません|すみません/.test(this.finalTranscript)) {
+      // 元の音声が「すいません」の場合処理を続行
+      if (this.pattern.test(this.finalTranscript)) {
         // 録音した音声を環境音と重ねてサーバーに送る処理
         this.statusText = '解析中';
 
@@ -217,11 +274,12 @@ export default {
           }
         };
 
-        await axios.post(`/api/games/${this.$route.params.game_id}/transcribe`, formData, config)
+        await axios.post('/api/games', formData, config)
           .then(res => {
             console.log(res.data)
-            this.result1.text = res.data.transcript
-            this.result1.confidence = res.data.confidence
+            this.result.transcript = res.data.transcript
+            this.result.confidence = res.data.confidence
+            this.isJudged = true
           }).catch(err => {
             console.log(err)
           })
@@ -241,7 +299,7 @@ export default {
 
       // 仮想のaudio要素を作り、src属性に録音した音声データを持たせる
       let audioOrigin = document.createElement('audio');
-      audioOrigin.src = this.voiceOriginUrl;
+      audioOrigin.src = this.voiceOrigin.url;
 
       // 仮想のaudio要素を作り、src属性に環境音データを持たせる
       let audioNoise = document.createElement('audio');
@@ -333,54 +391,26 @@ export default {
 </script>
 
 <style scoped>
-*,
-*:before,
-*:after {
-  -webkit-box-sizing: inherit;
-  box-sizing: inherit;
-}
-
-html {
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  font-size: 62.5%;
-}
-
-body {
-  background-color: #D8E3E7;
-}
-
-button.btn--circle {
-  font-size: 1.6rem;
-  width: 140px;
-  height: 140px;
-  padding: 20px 0 0;
-  border-radius: 50%;
-  color: #fff;
-  background: #51c4d3;
-  -webkit-box-shadow: 0 7px 0 rgba(0, 0, 0, 0.25);
-  box-shadow: 0 7px 0 rgba(0, 0, 0, 0.25);
-}
-
-button.btn--circle i {
-  font-size: 150%;
-}
-
-.fa-position-bottom {
-  position: absolute;
-  bottom: 1rem;
-  left: calc(50% - 0.5rem);
-}
-
-button.btn--circle:active {
-  -webkit-transform: translate(0, 4px);
-  transform: translate(0, 4px);
-  color: #fff;
-  -webkit-box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
-}
-
 .interim-transcript {
   font-style: italic;
 }
+
+.custom-loader {
+  animation: loader 1s infinite;
+  display: flex;
+}
+
+@keyframes loader {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#custom-disabled.v-btn--disabled {
+    background-color: #37879c !important;
+}
+
 </style>

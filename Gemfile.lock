@@ -42,6 +42,10 @@ GEM
       globalid (>= 0.3.6)
     activemodel (6.0.4.1)
       activesupport (= 6.0.4.1)
+    activemodel-serializers-xml (1.0.2)
+      activemodel (> 5.x)
+      activesupport (> 5.x)
+      builder (~> 3.1)
     activerecord (6.0.4.1)
       activemodel (= 6.0.4.1)
       activesupport (= 6.0.4.1)
@@ -123,6 +127,13 @@ GEM
     crass (1.0.6)
     debug_inspector (1.1.0)
     diff-lcs (1.4.4)
+    draper (4.0.2)
+      actionpack (>= 5.0)
+      activemodel (>= 5.0)
+      activemodel-serializers-xml (>= 1.0)
+      activesupport (>= 5.0)
+      request_store (>= 1.0)
+      ruby2_keywords
     ed25519 (1.2.4)
     erubi (1.10.0)
     factory_bot (6.2.0)
@@ -283,6 +294,8 @@ GEM
     rb-inotify (0.10.1)
       ffi (~> 1.0)
     regexp_parser (2.1.1)
+    request_store (1.5.0)
+      rack (>= 1.4)
     rexml (3.2.5)
     rspec-core (3.10.1)
       rspec-support (~> 3.10.0)
@@ -404,6 +417,7 @@ DEPENDENCIES
   capistrano-rbenv-vars (~> 0.1)
   capistrano3-puma
   capybara
+  draper
   ed25519
   factory_bot_rails
   faker
