@@ -3,7 +3,7 @@
     <v-row align-content="center" justify="center">
       <v-spacer />
       <v-col cols="8">
-        <v-img height="350" :src="src_restaurant" style="border-radius:5px;">
+        <v-img class="img--stage" height="350" :src="src_restaurant">
           <template v-slot:placeholder>
             <v-row
               class="fill-height ma-0"
@@ -413,4 +413,8 @@ export default {
     background-color: #37879c !important;
 }
 
+.img--stage {
+   border-radius: 5px;
+   box-shadow: 0 8px 10px 1px rgba(0,0,0,0.14), 0 3px 14px 2px rgba(0,0,0,0.12), 0 5px 5px -3px rgba(0,0,0,0.2);
+}
 </style>

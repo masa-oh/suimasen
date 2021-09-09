@@ -21,7 +21,7 @@
         </v-btn>
       </v-col>
       <v-col cols="3">
-        <v-img max-width="600" :src="src_woman" />
+        <v-img class="img--woman" max-width="600" :src="src_woman" />
       </v-col>
       <v-spacer />
     </v-row>
@@ -57,11 +57,25 @@ export default {
 }
 
 .service-name {
-  filter: drop-shadow(5px 5px 0 #F0F0F0);
+  font-family: 'Baloo Tamma', cursive;
+  color: #fff;
+  letter-spacing: 5px;
+  text-shadow: -1px -1px 0px #55a2b7,
+    3px 3px 0px #55a2b7,
+    6px 6px 0px #37879c;
+}
+
+.service-description {
+  color: #37879c;
+  letter-spacing: 5px;
 }
 
 .suimasen__content {
   background-image: "cafe.jpg";
   filter: grayscale(100%);
+}
+
+.img--woman {
+  filter: drop-shadow(5px 5px 0 #EE7C5895);
 }
 </style>
