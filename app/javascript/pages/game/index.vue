@@ -107,7 +107,7 @@
                     <v-row align-content="center" justify="center">
                       <v-col class="text-center" cols="10">
                         <p class="text-h5 mb-2">
-                          声を大きくしたいですか？
+                          もっと得点を上げたいですか？
                         </p>
                         <p>
                           声はトレーニングによって改善できます。<br />
@@ -116,6 +116,11 @@
                       </v-col>
                       <v-col class="text-center" cols="10">
                         <!-- サーバーのバッチジョブで取得したYoutube動画を埋め込み -->
+                        <youtube
+                          v-for="videoId in videoIds"
+                          :key="videoId"
+                          :video-id="videoId"
+                        />
                       </v-col>
                     </v-row>
                   </v-container>
@@ -144,6 +149,8 @@
 
 <script>
 import axios from '../../plugins/axios'
+import '../../plugins/vue_youtube'
+
 import noise1 from 'restaurant.mp3'
 import noise2 from 'izakaya.mp3'
 import noise3 from 'windblowing.mp3'
@@ -177,6 +184,11 @@ export default {
       pattern: /すいません|すみません/,
       finalTranscript: '', // 確定した認識結果
       interimTranscript: '', // 暫定の認識結果
+      videoIds: [
+        '6JrNNSHXz5g',
+        'Dakoxfx_Do4',
+        'Pm7qN6YCgY0',
+      ]
     }
   },
   computed: {
