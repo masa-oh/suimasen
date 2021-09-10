@@ -1,28 +1,31 @@
 <template>
   <footer id="footer">
     <v-footer
-      color="primary lighten-1"
+      color="transparent"
       padless
     >
       <v-row
+        align="center"
         justify="center"
         no-gutters
       >
-        <v-btn
-          v-for="link in links"
-          :key="link"
-          color="white"
-          text
-          rounded
-          class="my-2"
-        >
-          {{ link }}
-        </v-btn>
+        <v-col class="text-center" cols="12">
+          <v-btn
+            v-for="link in links"
+            :key="link"
+            color="black"
+            text
+            rounded
+            class="my-0"
+          >
+            {{ link }}
+          </v-btn>
+        </v-col>
         <v-col
-          class="primary lighten-2 py-4 text-center white--text"
+          class="py-2 text-center black--text"
           cols="12"
         >
-        <small>Copyright &copy; {{ new Date().getFullYear() }}. <strong>すいませんチェッカー</strong></small>
+        <small>Copyright &copy; {{ new Date().getFullYear() }}. すいませんチェッカー</small>
         </v-col>
       </v-row>
     </v-footer>
@@ -43,5 +46,7 @@ export default {
 </script>
 
 <style scoped>
-
+.linktext {
+  text-shadow: 1px  1px 4px #222;
+}
 </style>

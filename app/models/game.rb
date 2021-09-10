@@ -15,7 +15,7 @@ class Game < ApplicationRecord
     # APIを叩いて、結果を受け取る
     response = speech.recognize config: config, audio: audio
 
-    self.transcript = response.results.first.alternatives[0].transcript
-    self.confidence = response.results.first.alternatives[0].confidence
+    self.transcript = response.results.present? ? response.results.first.alternatives[0].transcript : ''
+    self.confidence = response.results.present? ? response.results.first.alternatives[0].confidence : 0
   end
 end

@@ -20,72 +20,124 @@
         <div class="text-center">
           <v-divider class="my-4" />
 
-          <strong>Stage 1. レストラン</strong>
+          <strong>Stage 1. {{ situation }}</strong>
           <v-fade-transition leave-absolute>
             <p>{{ statusText }}</p>
           </v-fade-transition>
 
           <v-divider class="my-4" />
 
-          <v-btn
-            :loading="isRunning"
-            :disabled="isRunning"
-            id="custom-disabled"
-            class="mx-2"
-            fab
-            dark
-            x-large
-            color="primary lighten-1"
-            @click="startListening"
-          >
-            <v-icon dark>fas fa-microphone</v-icon>
-          </v-btn>
-          <p class="mt-4">
-            <span>{{ finalTranscript }}</span>
-            <span class="interim-transcript">{{ interimTranscript }}</span><br/>
-          </p>
+          <div v-if="!isJudged">
+            <v-btn
+              :loading="isRunning"
+              :disabled="isRunning||isJudged"
+              id="custom-disabled"
+              class="mx-2"
+              fab
+              dark
+              x-large
+              color="primary lighten-1"
+              @click="startListening"
+            >
+              <v-icon dark>fas fa-microphone</v-icon>
+            </v-btn>
+            <p class="mt-4">
+              <span>{{ finalTranscript }}</span>
+              <span class="interim-transcript">{{ interimTranscript }}</span><br/>
+            </p>
+          </div>
+
+          <!-- 結果を描画 -->
+          <div v-if="isJudged" id="result">
+            <v-dialog
+              v-model="dialog"
+              scrollable
+              persistent
+            >
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn
+                  color="primary"
+                  x-large
+                  dark
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                結果を見る
+                </v-btn>
+              </template>
+  
+              <v-card color="secondary">
+                <v-card-title class="justify-center">
+                  <p class="text-h3">{{ resultMessage.summary }}</p>
+                </v-card-title>
+
+                <v-card-subtitle class="text-center">
+                  <p class="text-h5">総合得点：{{ score }}点</p>
+                </v-card-subtitle>
+
+                <v-card-text>
+                  <v-container>
+                    <v-row align-content="center" justify="center">
+                      <v-col class="text-center" cols="10">
+                        <p class="text-h5 mb-2" v-html="resultMessage.description.replace(/\n/g, '<br/>')" />
+                        <p>
+                          あなたの「すいません」は、<br>
+                          {{ situation }}では
+                          {{ result.transcript ? `『${result.transcript}』と聞こえました。` : '聞こえませんでした。' }}
+                        </p>
+                      </v-col>
+                    </v-row>
+
+                    <v-divider class="my-4" />
+
+                    <v-row align-content="center" justify="center">
+                      <v-col class="text-center" cols="5">
+                        <p>元のすいません</p>
+                        <audio controls :src="voiceOrigin.url"></audio>
+                      </v-col>
+                      <v-divider vertical />
+                      <v-col class="text-center" cols="5">
+                        <p>{{ situation }}でのすいません</p>
+                        <audio controls :src="voiceMixed.url"></audio>
+                      </v-col>
+                    </v-row>
+
+                    <v-divider class="my-4" />
+
+                    <v-row align-content="center" justify="center">
+                      <v-col class="text-center" cols="10">
+                        <p class="text-h5 mb-2">
+                          声を大きくしたいですか？
+                        </p>
+                        <p>
+                          声はトレーニングによって改善できます。<br />
+                          動画で学んで再チャレンジしよう！
+                        </p>
+                      </v-col>
+                      <v-col class="text-center" cols="10">
+                        <!-- サーバーのバッチジョブで取得したYoutube動画を埋め込み -->
+                      </v-col>
+                    </v-row>
+                  </v-container>
+                </v-card-text>
+
+                <v-divider />
+
+                <v-card-actions class="justify-center">
+                  <v-btn
+                    text
+                    @click="dialog = false"
+                    :to="{ name: 'TopIndex' }"
+                  >
+                    タイトルに戻る
+                  </v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
+          </div>
         </div>
       </v-col>
       <v-spacer />
-    </v-row>
-    <v-row align-content="center">
-      <v-spacer />
-      <v-col class="align-self-center" cols="10">
-        <!-- 結果を描画 -->
-        <div v-if="isJudged" id="result">
-          <div>
-            <p class="text-h2">
-              {{ resultMessage.summary }}
-            </p>
-            <p class="mb-12 d-sm-block" v-html="resultMessage.description.replace(/\n/g, '<br/>')" />
-            <p class="mb-12 d-sm-block">
-              場面：{{ situation }}<br>
-              認識結果：<span>{{ result.transcript }}</span><br>
-              得点：<span>{{ score }}</span>
-            </p>
-            <div>
-              元のすいません：
-              <audio controls :src="voiceOrigin.url"></audio>
-            </div>
-            <div>
-              {{ situation }}でのすいません：
-              <audio controls :src="voiceMixed.url"></audio>
-            </div>
-          </div>
-          <div>
-            <p class="text-h2">
-              声を大きくしたいですか？
-            </p>
-            <p class="mb-12 d-sm-block">
-              声はトレーニングによって改善できます。
-              こちらを実践して再チャレンジしよう！
-            </p>
-            <div>
-              <!-- サーバーのバッチジョブで取得したYoutube動画を埋め込み -->
-            </div>
-          </div>
-        </div>
-      </v-col>
     </v-row>
   </v-container>
 </template>
@@ -104,16 +156,16 @@ export default {
     return {
       src_restaurant: require("hamburger_restaurant.jpg"),
       loader: null,
+      dialog: false,
       isRunning: false,
+      isJudged: false,
       voiceOrigin: { url: '' },
       voiceMixed: { url: '' },
       srcOrigin: null,
       srcNoise: null,
       situation: "レストラン",
       result: { transcript: '', confidence: null },
-      isJudged: false,
       stream: null,
-      localStream: null,
       audioChunks: [],
       audioBlob: null,
       recorder: null,
@@ -214,16 +266,7 @@ export default {
 
     // Web Speech APIの処理を終了する
     stopSpeechRecognition() {
-      if (!this.isRunning) return;
       this.recognition.stop();
-      this.isRunning = false;
-    },
-
-    // Web Speech APIの処理を中断する
-    abortListening() {
-      this.recognition.abort();
-      this.recorder.stop();
-      this.isRunning = false;
     },
 
     // MediaRecorderで録音を開始する
@@ -235,7 +278,7 @@ export default {
         await this.startMixing(noise1, this.voiceMixed)
           .then(() => {
             // 節約のため、エラー解消するまでコメントアウト
-            //this.judgeSuimasen();
+            this.judgeSuimasen();
           });
       }
  
@@ -252,11 +295,7 @@ export default {
       // 元の音声が「すいません」の場合処理を続行
       if (this.pattern.test(this.finalTranscript)) {
         // 録音した音声を環境音と重ねてサーバーに送る処理
-        this.statusText = '解析中';
-
-        // クライアントのメモリ上に作成された録音データのURLを発行する
-        // this.url = window.URL.createObjectURL(this.audioBlob);
-
+        this.statusText = '通信中';
         let formData = new FormData();
 
         await this.waitAudioChunks();
@@ -264,7 +303,7 @@ export default {
         this.audioBlob = new Blob(this.audioChunks, {
             'type' : `${this.recorder.mimeType}`
         });
-        console.log('2ばんめ');
+        //console.log('2ばんめ');
 
         formData.append('voice', this.audioBlob);
 
@@ -280,11 +319,14 @@ export default {
             this.result.transcript = res.data.transcript
             this.result.confidence = res.data.confidence
             this.isJudged = true
+            this.isRunning = false
+            this.statusText = '完了'
           }).catch(err => {
             console.log(err)
           })
       } else {
-        this.statusText = 'もう一度やり直してください';
+        this.statusText = 'もう一度やり直してください'
+        this.isRunning = false
       }
     },
 
@@ -327,11 +369,8 @@ export default {
       audioOrigin.play();
       audioNoise.play();
 
-      // 録音用MediaStreamを作成する
-      this.localStream = this.destination.stream;
-
       // MediaRecorderで録音を開始する
-      this.recorder = new MediaRecorder(this.localStream);
+      this.recorder = new MediaRecorder(this.destination.stream);
       this.startMixRecording();
 
       // 録音処理が終了するのを待つ
@@ -352,14 +391,13 @@ export default {
       this.recorder.ondataavailable = (e) => {
         this.audioChunks = [];
         this.audioChunks.push(e.data);
-        console.log('1ばんめ');
+        //console.log('1ばんめ');
         audioElement.url = window.URL.createObjectURL(e.data);
       }
       this.recorder.stop();
       this.srcOrigin.disconnect(this.gain);
       this.gain.disconnect(this.destination);
       this.srcNoise.disconnect(this.destination);
-      // this.localstream.getTracks()[0].stop();
     },
 
     // MediaRecorderで録音を開始し、Blobを用意する
