@@ -48,98 +48,14 @@
           </div>
 
           <!-- 結果を描画 -->
-          <div v-if="isJudged" id="result">
-            <v-dialog
-              v-model="dialog"
-              scrollable
-              persistent
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn
-                  color="primary"
-                  x-large
-                  dark
-                  v-bind="attrs"
-                  v-on="on"
-                >
-                結果を見る
-                </v-btn>
-              </template>
-  
-              <v-card color="secondary">
-                <v-card-title class="justify-center">
-                  <p class="text-h3">{{ resultMessage.summary }}</p>
-                </v-card-title>
-
-                <v-card-subtitle class="text-center">
-                  <p class="text-h5">総合得点：{{ score }}点</p>
-                </v-card-subtitle>
-
-                <v-card-text>
-                  <v-container>
-                    <v-row align-content="center" justify="center">
-                      <v-col class="text-center" cols="10">
-                        <p class="text-h5 mb-2" v-html="resultMessage.description.replace(/\n/g, '<br/>')" />
-                        <p>
-                          あなたの「すいません」は、<br>
-                          {{ situation }}では
-                          {{ result.transcript ? `『${result.transcript}』と聞こえました。` : '聞こえませんでした。' }}
-                        </p>
-                      </v-col>
-                    </v-row>
-
-                    <v-divider class="my-4" />
-
-                    <v-row align-content="center" justify="center">
-                      <v-col class="text-center" cols="5">
-                        <p>元のすいません</p>
-                        <audio controls :src="voiceOrigin.url"></audio>
-                      </v-col>
-                      <v-divider vertical />
-                      <v-col class="text-center" cols="5">
-                        <p>{{ situation }}でのすいません</p>
-                        <audio controls :src="voiceMixed.url"></audio>
-                      </v-col>
-                    </v-row>
-
-                    <v-divider class="my-4" />
-
-                    <v-row align-content="center" justify="center">
-                      <v-col class="text-center" cols="10">
-                        <p class="text-h5 mb-2">
-                          もっと得点を上げたいですか？
-                        </p>
-                        <p>
-                          声はトレーニングによって改善できます。<br />
-                          動画で学んで再チャレンジしよう！
-                        </p>
-                      </v-col>
-                      <v-col class="text-center" cols="10">
-                        <!-- サーバーのバッチジョブで取得したYoutube動画を埋め込み -->
-                        <youtube
-                          v-for="videoId in videoIds"
-                          :key="videoId"
-                          :video-id="videoId"
-                        />
-                      </v-col>
-                    </v-row>
-                  </v-container>
-                </v-card-text>
-
-                <v-divider />
-
-                <v-card-actions class="justify-center">
-                  <v-btn
-                    text
-                    @click="dialog = false"
-                    :to="{ name: 'TopIndex' }"
-                  >
-                    タイトルに戻る
-                  </v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
-          </div>
+          <GameResult
+            v-if="isJudged"
+            :result="result"
+            :pattern="pattern"
+            :situation="situation"
+            :voiceMixed="voiceMixed"
+            :voiceOrigin="voiceOrigin"
+          />
         </div>
       </v-col>
       <v-spacer />
@@ -148,6 +64,8 @@
 </template>
 
 <script>
+import GameResult from '../../components/GameResult.vue'
+
 import axios from '../../plugins/axios'
 import '../../plugins/vue_youtube'
 
@@ -159,11 +77,13 @@ import 'hamburger_restaurant.jpg'
 
 export default {
   name: "GameIndex",
+  components: {
+    GameResult,
+  },
   data() {
     return {
       src_restaurant: require("hamburger_restaurant.jpg"),
       loader: null,
-      dialog: false,
       isRunning: false,
       isJudged: false,
       voiceOrigin: { url: '' },
@@ -184,11 +104,6 @@ export default {
       pattern: /すいません|すみません/,
       finalTranscript: '', // 確定した認識結果
       interimTranscript: '', // 暫定の認識結果
-      videoIds: [
-        '6JrNNSHXz5g',
-        'Dakoxfx_Do4',
-        'Pm7qN6YCgY0',
-      ]
     }
   },
   computed: {
@@ -327,7 +242,7 @@ export default {
 
         await axios.post('/api/games', formData, config)
           .then(res => {
-            console.log(res.data)
+            //console.log(res.data)
             this.result.transcript = res.data.transcript
             this.result.confidence = res.data.confidence
             this.isJudged = true
