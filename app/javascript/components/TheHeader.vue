@@ -1,11 +1,18 @@
 <template>
   <v-app-bar
-    color="primary lighten-1"
+    color="#22222250"
     dark
+    flat
     app
   >
     <v-toolbar-title>
-      <v-img :src="src_dark" max-width="250" max-height="50"/>
+      <router-link :to="{ name: 'TopIndex' }">
+        <v-img
+          :src="src_dark"
+          max-width="250"
+          max-height="50"
+        />
+      </router-link>
     </v-toolbar-title>
     <v-spacer />
     <v-toolbar-items>
