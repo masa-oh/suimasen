@@ -20,7 +20,7 @@
         <div class="text-center">
           <v-divider class="my-4" />
 
-          <strong>Stage 1. {{ situation }}</strong>
+          <strong>{{ situation }}ステージ</strong>
           <v-fade-transition leave-absolute>
             <p>{{ statusText }}</p>
           </v-fade-transition>
@@ -100,34 +100,11 @@ export default {
       ctx: null,
       destination: null,
       gain: null,
-      statusText: 'ボタンを押して測定開始',
+      statusText: 'ボタンを押したら、店員さんを呼んでみよう！',
       pattern: /すいません|すみません/,
       finalTranscript: '', // 確定した認識結果
       interimTranscript: '', // 暫定の認識結果
     }
-  },
-  computed: {
-    score() {
-      return (this.pattern.test(this.result.transcript) ? Math.round(this.result.confidence * 100) : 0);
-    },
-    resultMessage() {
-      if (this.score > 80) {
-        return {
-          summary: "Excellent!",
-          description: "理想的なすいませんです。\n率先して店員さんを呼びましょう。"
-        }
-      } else if (this.score > 60) {
-        return {
-          summary: "Good!",
-          description: "なかなかいい線ですね。\n練習してさらなる高みを目指しましょう。"
-        }
-      } else {
-        return {
-          summary: "Not Good...",
-          description: "店員さんを呼ぶのは諦めて、\n呼び鈴のあるお店を選びましょう。"
-        }
-      }
-    },
   },
   mounted() {},
   methods: {
@@ -159,7 +136,7 @@ export default {
       this.recognition.lang = 'ja'
       this.recognition.interimResults = true
       this.recognition.continuous = false
-      this.statusText = '録音中'
+      this.statusText = '認識中...'
       if (this.voiceOrigin.url) {
         window.URL.revokeObjectURL(this.voiceOrigin.url);
         this.voiceOrigin.url = null;
@@ -179,7 +156,7 @@ export default {
             this.interimTranscript = '';
             this.finalTranscript += transcript;
             this.stopSpeechRecognition();
-            this.statusText = '解析中';
+            this.statusText = '解析中...';
             this.stopRecording();
           } else {
             this.interimTranscript = transcript;
@@ -222,7 +199,7 @@ export default {
       // 元の音声が「すいません」の場合処理を続行
       if (this.pattern.test(this.finalTranscript)) {
         // 録音した音声を環境音と重ねてサーバーに送る処理
-        this.statusText = '通信中';
+        this.statusText = '通信中...';
         let formData = new FormData();
 
         await this.waitAudioChunks();
@@ -247,12 +224,12 @@ export default {
             this.result.confidence = res.data.confidence
             this.isJudged = true
             this.isRunning = false
-            this.statusText = '完了'
+            this.statusText = '測定完了！気づいてもらえたかな…？'
           }).catch(err => {
             console.log(err)
           })
       } else {
-        this.statusText = 'もう一度やり直してください'
+        this.statusText = '店員さんを呼ぶには、『すいませーん！』と言おう！'
         this.isRunning = false
       }
     },

@@ -22,18 +22,14 @@
           <p class="text-h3">{{ resultMessage.summary }}</p>
         </v-card-title>
         <v-card-subtitle class="text-center">
-          <p class="text-h5">総合得点：{{ score }}点</p>
+          <p class="text-h5"  v-html="resultMessage.score.replace(/\n/g, '<br/>')" />
         </v-card-subtitle>
         <v-card-text>
           <v-container>
             <v-row align-content="center" justify="center">
               <v-col class="text-center" cols="10">
                 <p class="text-h5 mb-2" v-html="resultMessage.description.replace(/\n/g, '<br/>')" />
-                <p>
-                  あなたの「すいません」は、<br>
-                  {{ situation }}では
-                  {{ result.transcript ? `『${result.transcript}』と聞こえました。` : '聞こえませんでした。' }}
-                </p>
+                <p v-html="resultMessage.transcript.replace(/\n/g, '<br/>')" />
               </v-col>
             </v-row>
             <v-divider class="my-4" />
@@ -49,6 +45,19 @@
               </v-col>
             </v-row>
             <v-divider class="my-4" />
+
+            <v-row align-content="center" justify="center">
+              <v-col class="text-center" cols="10">
+                <div class="sns-share-area">
+                  <v-btn
+                    :href="snsTwitter"
+                    target="_blank"
+                  ><i class="fab fa-twitter" />結果をシェア
+                  </v-btn>
+                </div>
+              </v-col>
+            </v-row>
+
             <v-row align-content="center" justify="center">
               <v-col class="text-center" cols="10">
                 <p class="text-h5 mb-2">
@@ -84,7 +93,7 @@
 </template>
 
 <script>
-import '../plugins/vue_youtube'
+import '../plugins/vue_youtube';
 
 export default {
   name: "GameResult",
@@ -119,26 +128,36 @@ export default {
       return (this.pattern.test(this.result.transcript) ? Math.round(this.result.confidence * 100) : 0);
     },
     resultMessage() {
+      let ret = {}
       if (this.score > 80) {
-        return {
-          summary: "Excellent!",
-          description: "理想的なすいませんです。\n率先して店員さんを呼びましょう。"
-        }
+        ret.summary = "Excellent!"
+        ret.description = "理想的なすいませんです。\n率先して店員さんを呼びましょう。"
       } else if (this.score > 60) {
-        return {
-          summary: "Good!",
-          description: "なかなかいい線ですね。\n練習してさらなる高みを目指しましょう。"
-        }
+        ret.summary = "Good!"
+        ret.description = "なかなかいい線ですね。\n練習してさらなる高みを目指しましょう。"
       } else {
-        return {
-          summary: "Not Good...",
-          description: "店員さんを呼ぶのは諦めて、\n呼び鈴のあるお店を選びましょう。"
-        }
+        ret.summary = "Not Good..."
+        ret.description = "店員さんを呼ぶのは諦めて、\n呼び鈴のあるお店を選びましょう。"
       }
+      ret.score = `得点：${this.score}点`
+      ret.transcript =  "あなたの「すいません」は、\n" +
+                        `${this.situation}では` +
+                        (this.result.transcript ? `『${this.result.transcript}』と聞こえました。` : "聞こえませんでした。")
+      return ret
     },
     recommendedVideoId() {
       let rand = Math.floor(Math.random() * this.videoIds.length)
       return this.videoIds[rand]
+    },
+    fullPath() {
+      return window.location.origin + this.$router.resolve({ name: "TopIndex" }).href
+    },
+    snsTwitter() {
+      // Twitterシェアの文言を設定
+      let ret = "https://twitter.com/intent/tweet?url=" + this.fullPath + "%0a" +
+                "&text=" + this.resultMessage.score + "%0a" + this.resultMessage.transcript + "%0a" + 
+                '&hashtags=すいませんチェッカー';
+      return ret;
     }
   },
   methods: {
