@@ -229,7 +229,7 @@ export default {
             console.log(err)
           })
       } else {
-        this.statusText = '店員さんを呼ぶには、『すいませーん！』と言おう！'
+        this.statusText = '「すいません」と言って店員さんを呼ぼう！'
         this.isRunning = false
       }
     },
