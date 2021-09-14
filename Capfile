@@ -40,6 +40,7 @@ require 'capistrano/bundler'
 # 参照：https://qiita.com/jesus_isao/items/c95ea253dd7a90b01ff0
 # require 'capistrano/rails/assets'
 require 'capistrano/rails/migrations'
+require 'capistrano/yarn'
 require 'capistrano/puma'
 install_plugin Capistrano::Puma
 install_plugin Capistrano::Puma::Systemd
