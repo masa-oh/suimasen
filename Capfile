@@ -36,9 +36,7 @@ install_plugin Capistrano::SCM::Git
 
 require 'capistrano/rbenv'
 require 'capistrano/bundler'
-# サーバのメモリが貧弱なため、assets:precompileはサーバで実行させないようにする
-# 参照：https://qiita.com/jesus_isao/items/c95ea253dd7a90b01ff0
-# require 'capistrano/rails/assets'
+require 'capistrano/rails/assets'
 require 'capistrano/rails/migrations'
 require 'capistrano/yarn'
 require 'capistrano/puma'
