@@ -6,7 +6,7 @@ class Game < ApplicationRecord
   def transcribe(audio_file)
     require 'google/cloud/speech'
     # サービスアカウントの接続情報を記したファイルのパスを環境変数に格納
-    ENV['GOOGLE_APPLICATION_CREDENTIALS'] = File.expand_path('../../../gcp_key.json', __FILE__)
+    ENV['GOOGLE_APPLICATION_CREDENTIALS'] = File.expand_path('../../../config/gcp_key.json', __FILE__)
     speech = Google::Cloud::Speech.speech
 
     config = { language_code: 'ja-JP' } # 日本語に設定
