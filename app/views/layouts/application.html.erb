@@ -19,6 +19,18 @@
     <meta property="og:title" content="すいませんチェッカー - 店員さん、呼べてますか？" />
     <meta property="og:description" content="すいませんチェッカーは、店員さんを呼ぶ声が中々届かない人のための、 音声測定・発声改善支援サービスです。" />
     <meta property="og:site_name" content="すいませんチェッカー" />
+
+    <% if Rails.env.production? %>
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-FSPVKCF04D"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-FSPVKCF04D');
+      </script>
+    <% end %>
   </head>
 
   <body>
