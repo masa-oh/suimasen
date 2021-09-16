@@ -141,8 +141,10 @@ export default {
       }
       ret.score = `得点：${this.score}点`
       ret.transcript =  "あなたの「すいません」は、\n" +
-                        `${this.situation}では` +
-                        (this.result.transcript ? `『${this.result.transcript}』と聞こえました。` : "聞こえませんでした。")
+                        `${this.situation}で` +
+                        (this.pattern.test(this.result.transcript) ? "しっかり聞こえました！！" :
+                         this.result.transcript ? `『${this.result.transcript}』と聞こえました。` :
+                         "聞こえませんでした。")
       return ret
     },
     recommendedVideoId() {
@@ -154,9 +156,15 @@ export default {
     },
     snsTwitter() {
       // Twitterシェアの文言を設定
-      let ret = "https://twitter.com/intent/tweet?url=" + this.fullPath + "%0a" +
-                "&text=" + this.resultMessage.score + "%0a" + this.resultMessage.transcript + "%0a" + 
-                '&hashtags=すいませんチェッカー';
+      let ret = "https://twitter.com/intent/tweet?url=" + this.fullPath +
+                "&text=私のすいませんは…" + "%0a%0a" +
+                `${this.situation}で` +
+                (this.pattern.test(this.result.transcript) ? "しっかり聞こえました！！" :
+                 this.result.transcript ? `『${this.result.transcript}』と聞こえました。` :
+                 "聞こえませんでした。") + "%0a%0a" +
+                `${this.resultMessage.score}（${this.resultMessage.summary}）` + "%0a%0a" +
+                "↓ここから「すいません」の上手さを測定してみよう！" + "%0a%0a" +
+                "&hashtags=すいませんチェッカー";
       return ret;
     }
   },
