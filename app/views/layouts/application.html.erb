@@ -13,12 +13,19 @@
     <%= stylesheet_link_tag 'https://use.fontawesome.com/releases/v5.0.13/css/all.css' %>
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
-    <meta http-equiv="content-type" charset="utf-8">
-    <meta name="description" content="すいませんチェッカーは、店員さんを呼ぶ声が中々届かない人のための、 音声測定・発声改善支援サービスです。">
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="すいませんチェッカー - 店員さん、呼べてますか？" />
-    <meta property="og:description" content="すいませんチェッカーは、店員さんを呼ぶ声が中々届かない人のための、 音声測定・発声改善支援サービスです。" />
-    <meta property="og:site_name" content="すいませんチェッカー" />
+    <%= display_meta_tags(default_meta_tags) %>
+
+    <% if Rails.env.production? %>
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=G-FSPVKCF04D"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-FSPVKCF04D');
+      </script>
+    <% end %>
   </head>
 
   <body>
