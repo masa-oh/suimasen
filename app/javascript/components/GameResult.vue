@@ -83,6 +83,7 @@
           <v-btn
             text
             @click="dialog = false"
+            :to="{ name: 'TopIndex' }"
           >
             タイトルに戻る
           </v-btn>
