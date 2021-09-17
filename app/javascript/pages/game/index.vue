@@ -115,22 +115,22 @@ export default {
     // stage = { name: ステージ名, difficulty: 難易度（5段階評価）, gain_value: 声の減衰率 }
     switch (this.$route.params.stage_name) {
       case 'restaurant':
-        this.stage = { name: "レストラン", difficulty: 2, gain_value: 0.5 };
+        this.stage = { name: "レストラン", difficulty: 2, gain_value: 0.6 };
         this.srcNoise = noise_restaurant
         this.srcImage = require("restaurant.jpg")
         break;
       case 'pub':
-        this.stage = { name: "居酒屋", difficulty: 3, gain_value: 0.4 };
+        this.stage = { name: "居酒屋", difficulty: 3, gain_value: 0.6 };
         this.srcNoise = noise_izakaya
         this.srcImage = require("izakaya.jpg")
         break;
       case 'wind':
-        this.stage = { name: "強風の中", difficulty: 4, gain_value: 0.3 };
+        this.stage = { name: "強風の中", difficulty: 4, gain_value: 0.4 };
         this.srcNoise = noise_wind
         this.srcImage = require("strong_wind.jpg")
         break;
       case 'pachinko':
-        this.stage = { name: "パチンコ屋", difficulty: 5, gain_value: 0.3 };
+        this.stage = { name: "パチンコ屋", difficulty: 5, gain_value: 0.4 };
         this.srcNoise = noise_pachinko
         this.srcImage = require("pachinko.jpg")
         break;

@@ -86,7 +86,7 @@
             @click="dialog = false"
             :to="{ name: 'StageSelectIndex' }"
           >
-            別のステージで再挑戦する
+            再挑戦する
           </v-btn>
           <v-btn
             text

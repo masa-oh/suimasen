@@ -45,10 +45,10 @@ export default {
     return {
       stages: [
         // { name: ステージ名, difficulty: 難易度（5段階評価）, gain_value: 声の減衰率 }
-        { id: 1, name: { en: "restaurant", ja: "レストラン" }, difficulty: 2, gain_value: 0.5 },
-        { id: 2, name: { en: "pub", ja: "居酒屋" }, difficulty: 3, gain_value: 0.4 },
-        { id: 3, name: { en: "wind", ja: "強風の中" }, difficulty: 4, gain_value: 0.3 },
-        { id: 4, name: { en: "pachinko", ja: "パチンコ屋" }, difficulty: 5, gain_value: 0.3 }
+        { id: 1, name: { en: "restaurant", ja: "レストラン" }, difficulty: 2, gain_value: 0.6 },
+        { id: 2, name: { en: "pub", ja: "居酒屋" }, difficulty: 3, gain_value: 0.6 },
+        { id: 3, name: { en: "wind", ja: "強風の中" }, difficulty: 4, gain_value: 0.4 },
+        { id: 4, name: { en: "pachinko", ja: "パチンコ屋" }, difficulty: 5, gain_value: 0.4 }
       ]
     }
   }
