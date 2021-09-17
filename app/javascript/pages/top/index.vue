@@ -12,7 +12,7 @@
         <v-btn
             class="mb-8"
             color="primary"
-            :to="{ name: 'GameIndex' }"
+            :to="{ name: 'StageSelectIndex' }"
             x-large
             dark
         >

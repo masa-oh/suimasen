@@ -22,7 +22,8 @@
           <p class="text-h3">{{ resultMessage.summary }}</p>
         </v-card-title>
         <v-card-subtitle class="text-center">
-          <p class="text-h5"  v-html="resultMessage.score.replace(/\n/g, '<br/>')" />
+          <p class="text-h5" v-html="`ステージ：${stage.name}（${'★'.repeat(stage.difficulty)}）`" />
+          <p class="text-h5" v-html="resultMessage.score.replace(/\n/g, '<br/>')" />
         </v-card-subtitle>
         <v-card-text>
           <v-container>
@@ -40,7 +41,7 @@
               </v-col>
               <v-divider vertical />
               <v-col class="text-center" cols="5">
-                <p>{{ situation }}でのすいません</p>
+                <p>{{ stage.name }}でのすいません</p>
                 <audio controls :src="voiceMixed.url"></audio>
               </v-col>
             </v-row>
@@ -83,6 +84,13 @@
           <v-btn
             text
             @click="dialog = false"
+            :to="{ name: 'StageSelectIndex' }"
+          >
+            別のステージで再挑戦する
+          </v-btn>
+          <v-btn
+            text
+            @click="dialog = false"
             :to="{ name: 'TopIndex' }"
           >
             タイトルに戻る
@@ -99,7 +107,7 @@ import '../plugins/vue_youtube';
 export default {
   name: "GameResult",
   props: {
-    situation: {},
+    stage: {},
     pattern: {},
     voiceOrigin: {},
     voiceMixed: {},
@@ -130,7 +138,7 @@ export default {
     },
     resultMessage() {
       let ret = {}
-      if (this.score > 80) {
+      if (this.score > 90) {
         ret.summary = "Excellent!"
         ret.description = "理想的なすいませんです。\n率先して店員さんを呼びましょう。"
       } else if (this.score > 60) {
@@ -142,10 +150,9 @@ export default {
       }
       ret.score = `得点：${this.score}点`
       ret.transcript =  "あなたの「すいません」は、\n" +
-                        `${this.situation}で` +
-                        (this.pattern.test(this.result.transcript) ? "しっかり聞こえました！！" :
-                         this.result.transcript ? `『${this.result.transcript}』と聞こえました。` :
-                         "聞こえませんでした。")
+                        (this.pattern.test(this.result.transcript) ? `${this.stage.name}でもしっかり聞こえました！！` :
+                         this.result.transcript ? `${this.stage.name}では『${this.result.transcript}』と聞こえました。` :
+                         `${this.stage.name}では聞こえませんでした。`)
       return ret
     },
     recommendedVideoId() {
@@ -158,13 +165,13 @@ export default {
     snsTwitter() {
       // Twitterシェアの文言を設定
       let ret = "https://twitter.com/intent/tweet?url=" + this.fullPath +
-                "&text=私のすいませんは…" + "%0a%0a" +
-                `${this.situation}で` +
-                (this.pattern.test(this.result.transcript) ? "しっかり聞こえました！！" :
-                 this.result.transcript ? `『${this.result.transcript}』と聞こえました。` :
-                 "聞こえませんでした。") + "%0a%0a" +
-                `${this.resultMessage.score}（${this.resultMessage.summary}）` + "%0a%0a" +
-                "↓ここから「すいません」の上手さを測定してみよう！" + "%0a%0a" +
+                "&text=" +
+                (`ステージ【${this.stage.name}】（${'★'.repeat(this.stage.difficulty)}）${this.score>0 ? 'クリア！' : '失敗…'}`) + "%0a%0a" + 
+                "私のすいませんは、" +
+                (this.pattern.test(this.result.transcript) ? `${this.stage.name}でもしっかり聞こえます！` :
+                 this.result.transcript ? `${this.stage.name}では『${this.result.transcript}』と聞こえてしまいます。` :
+                 `${this.stage.name}では全く聞こえません…。`) + "%0a%0a" +
+                "↓「すいません」の上手さをチェック！" + "%0a%0a" +
                 "&hashtags=すいませんチェッカー";
       return ret;
     }
