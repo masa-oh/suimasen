@@ -168,9 +168,9 @@ export default {
                 "&text=" +
                 (`ステージ【${this.stage.name}】（${'★'.repeat(this.stage.difficulty)}）${this.score>0 ? 'クリア！' : '失敗…'}`) + "%0a%0a" + 
                 "私のすいませんは、" +
-                (this.pattern.test(this.result.transcript) ? `${this.stage.name}でもしっかり聞こえます！` :
-                 this.result.transcript ? `${this.stage.name}では『${this.result.transcript}』と聞こえてしまいます。` :
-                 `${this.stage.name}では全く聞こえません…。`) + "%0a%0a" +
+                (this.pattern.test(this.result.transcript) ? `${this.stage.name}でもしっかり通る声でした！` :
+                 this.result.transcript ? `${this.stage.name}では『${this.result.transcript}』と聞き取られました。` :
+                 `${this.stage.name}では聞き取ってもらえませんでした。`) + "%0a%0a" +
                 "↓「すいません」の上手さをチェック！" + "%0a%0a" +
                 "&hashtags=すいませんチェッカー";
       return ret;
