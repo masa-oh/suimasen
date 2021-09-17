@@ -1,5 +1,5 @@
 <template>
-  <v-app style="background: linear-gradient(128deg, #EE7C5895, #D8E3E7, #55a2b7);">
+  <v-app style="background: linear-gradient(128deg, #EE7C5895, #a882f650, #55a2b790);">
     <!-- ヘッダー -->
     <TheHeader />
 

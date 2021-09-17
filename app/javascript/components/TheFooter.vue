@@ -12,13 +12,14 @@
         <v-col class="text-center" cols="12">
           <v-btn
             v-for="link in links"
-            :key="link"
+            :key="link.text"
+            :to="link.to"
             color="black"
             text
             rounded
             class="my-0"
           >
-            {{ link }}
+            {{ link.text }}
           </v-btn>
         </v-col>
         <v-col
@@ -37,9 +38,9 @@ export default {
   name: "TheFooter",
   data: () => ({
     links: [
-      '利用規約',
-      'プライバシーポリシー',
-      'お問い合わせ',
+      { text: '利用規約', to: { name: 'Terms' } },
+      { text: 'プライバシーポリシー', to: { name: 'PrivacyPolicy' } },
+      { text: 'お問い合わせ', to: { name: 'Inquiry' } }
     ],
   }),
 }

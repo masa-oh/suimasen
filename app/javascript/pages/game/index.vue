@@ -3,7 +3,7 @@
     <v-row align-content="center" justify="center">
       <v-spacer />
       <v-col cols="8">
-        <v-img class="img--stage" height="350" :src="src_restaurant">
+        <v-img class="img--stage" height="350" :src="srcImage">
           <template v-slot:placeholder>
             <v-row
               class="fill-height ma-0"
@@ -20,7 +20,7 @@
         <div class="text-center">
           <v-divider class="my-4" />
 
-          <strong>{{ situation }}ステージ</strong>
+          <strong>{{ stage.name }}ですいません</strong>
           <v-fade-transition leave-absolute>
             <p>{{ statusText }}</p>
           </v-fade-transition>
@@ -52,7 +52,7 @@
             v-if="isJudged"
             :result="result"
             :pattern="pattern"
-            :situation="situation"
+            :stage="stage"
             :voiceMixed="voiceMixed"
             :voiceOrigin="voiceOrigin"
           />
@@ -69,11 +69,15 @@ import GameResult from '../../components/GameResult.vue'
 import axios from '../../plugins/axios'
 import '../../plugins/vue_youtube'
 
-import noise1 from 'restaurant.mp3'
-import noise2 from 'izakaya.mp3'
-import noise3 from 'windblowing.mp3'
-import noise4 from 'cicadasinging.mp3'
-import 'hamburger_restaurant.jpg'
+import noise_restaurant from 'restaurant.mp3';
+import noise_izakaya from 'izakaya.mp3';
+import noise_wind from 'windblowing.mp3';
+import noise_pachinko from 'pachinko.mp3';
+
+import 'restaurant.jpg';
+import 'izakaya.jpg';
+import 'strong_wind.jpg';
+import 'pachinko.jpg';
 
 export default {
   name: "GameIndex",
@@ -82,7 +86,9 @@ export default {
   },
   data() {
     return {
-      src_restaurant: require("hamburger_restaurant.jpg"),
+      srcNoise: null,
+      srcImage: null,
+      stage: null,
       loader: null,
       isRunning: false,
       isJudged: false,
@@ -90,7 +96,6 @@ export default {
       voiceMixed: { url: '' },
       srcOrigin: null,
       srcNoise: null,
-      situation: "レストラン",
       result: { transcript: '', confidence: null },
       stream: null,
       audioChunks: [],
@@ -106,7 +111,31 @@ export default {
       interimTranscript: '', // 暫定の認識結果
     }
   },
-  mounted() {},
+  created() {
+    // stage = { name: ステージ名, difficulty: 難易度（5段階評価）, gain_value: 声の減衰率 }
+    switch (this.$route.params.stage_name) {
+      case 'restaurant':
+        this.stage = { name: "レストラン", difficulty: 2, gain_value: 0.6 };
+        this.srcNoise = noise_restaurant
+        this.srcImage = require("restaurant.jpg")
+        break;
+      case 'pub':
+        this.stage = { name: "居酒屋", difficulty: 3, gain_value: 0.6 };
+        this.srcNoise = noise_izakaya
+        this.srcImage = require("izakaya.jpg")
+        break;
+      case 'wind':
+        this.stage = { name: "強風の中", difficulty: 4, gain_value: 0.4 };
+        this.srcNoise = noise_wind
+        this.srcImage = require("strong_wind.jpg")
+        break;
+      case 'pachinko':
+        this.stage = { name: "パチンコ屋", difficulty: 5, gain_value: 0.4 };
+        this.srcNoise = noise_pachinko
+        this.srcImage = require("pachinko.jpg")
+        break;
+    }
+  },
   methods: {
     startListening() {
       console.log('getUserMedia')
@@ -136,7 +165,7 @@ export default {
       this.recognition.lang = 'ja'
       this.recognition.interimResults = true
       this.recognition.continuous = false
-      this.statusText = '認識中...'
+      this.statusText = '「すいません」を聞き取り中...'
       if (this.voiceOrigin.url) {
         window.URL.revokeObjectURL(this.voiceOrigin.url);
         this.voiceOrigin.url = null;
@@ -179,7 +208,7 @@ export default {
         // クライアントのメモリ上に作成された録音データのURLを発行する
         this.voiceOrigin.url = await window.URL.createObjectURL(e.data);
         // 録音した声と環境音を重ねる
-        await this.startMixing(noise1, this.voiceMixed)
+        await this.startMixing(this.srcNoise, this.voiceMixed)
           .then(() => {
             // 節約のため、エラー解消するまでコメントアウト
             this.judgeSuimasen();
@@ -257,7 +286,7 @@ export default {
 
       // 音声はボリュームを小さくするフィルターを通す（gain.valueは最小が0、最大(デフォルト)が1）
       this.gain = this.ctx.createGain();
-      this.gain.gain.value = 0.5;
+      this.gain.gain.value = this.stage.gain_value;
 
       // 作成したMediaSourceに、両方とも同じ出力先を設定する
       this.srcOrigin.connect(this.gain).connect(this.destination);
