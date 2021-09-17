@@ -3,10 +3,9 @@
     <v-row align-content="center">
       <v-spacer />
       <v-col class="text-right align-self-center" cols="6">
-        <p class="text-h2 mb-8 d-sm-block service-name">すいませんチェッカー</p>
-        <p class="text-h5 mb-12 d-sm-block service-description">
-          店員さんを呼ぶ声が通らない全ての人のための、
-          <br>音声測定・発声改善支援サービスです。
+        <p class="text-h2 mb-8 d-sm-block text-no-wrap service-name">すいませんチェッカー</p>
+        <p class="text-h5 mb-12 font-weight-bold d-sm-block text-no-wrap service-description">
+          周りの音にかき消されない<br/>"通る声"を手に入れよう
         </p>
         <v-spacer />
         <!-- 開始ボタン -->
@@ -21,7 +20,7 @@
         </v-btn>
       </v-col>
       <v-col cols="3">
-        <v-img class="img--woman" max-width="600" :src="src_woman" />
+        <v-img class="img--woman" max-width="300" :src="src_woman" />
       </v-col>
       <v-spacer />
     </v-row>
@@ -39,9 +38,7 @@ export default {
   name: "TopIndex",
   data() {
     return {
-      src_boxlogo: require("suimasen_boxlogo.svg"),
       src_woman: require("suimasen_woman.svg"),
-      src_dark: require("suimasen_dark.svg"),
     }
   },
 }
@@ -66,16 +63,8 @@ export default {
 }
 
 .service-description {
-  color: #37879c;
-  letter-spacing: 5px;
-}
-
-.suimasen__content {
-  background-image: "cafe.jpg";
-  filter: grayscale(100%);
-}
-
-.img--woman {
-  filter: drop-shadow(5px 5px 0 #EE7C5895);
+  color: #55a2b7;
+  letter-spacing: -4px;
+  text-shadow: 1px 1px 0px #fff;
 }
 </style>

@@ -136,7 +136,7 @@ export default {
       this.recognition.lang = 'ja'
       this.recognition.interimResults = true
       this.recognition.continuous = false
-      this.statusText = '認識中...'
+      this.statusText = '「すいません」を聞き取り中...'
       if (this.voiceOrigin.url) {
         window.URL.revokeObjectURL(this.voiceOrigin.url);
         this.voiceOrigin.url = null;
