@@ -35,8 +35,17 @@
               <v-card-text>
                 <p/>
                 <ul>
-                  <li>このゲームは、PCでのみプレイ可能です。スマートフォンではご利用いただけません。（※近日中に対応予定です。）</li>
-                  <li>推奨環境は、Windows（ブラウザ：Google Chrome, Microsoft Edge）およびmacOS（ブラウザ：Google Chrome, Safari）です。</li>
+                  <li>
+                    このゲームは、PCでのみプレイ可能です。<br/>
+                    現時点で、スマートフォンからはご利用いただけません。（※近日中の対応を予定しております）
+                  </li>
+                  <li>
+                      推奨ブラウザは以下の通りです。
+                    <ul>
+                      <li>Windowsの場合：Google Chrome，Microsoft Edge（※Internet Explolerでは利用不可）</li>
+                      <li>macOSの場合：Google Chrome，Safari</li>
+                    </ul>
+                  </li>
                   <li>このゲームでは、マイクを使用します。周囲の環境には十分ご配慮ください。</li>
                   <li>
                     ゲームを開始した時点で、
