@@ -33,10 +33,17 @@
               </v-card-title>
 
               <v-card-text>
-                <p />
-                <p>・このゲームは、PCでのみプレイ可能です。スマートフォンではご利用いただけません。（※近日中に対応予定です。）</p>
-                <p>・推奨環境は、Windows（ブラウザ：Google Chrome, Microsoft Edge）およびmacOS（ブラウザ：Google Chrome, Safari）です。</p>
-                <p>・このゲームでは、マイクを使用します。周囲の環境には十分ご配慮ください。</p>
+                <p/>
+                <ul>
+                  <li>このゲームは、PCでのみプレイ可能です。スマートフォンではご利用いただけません。（※近日中に対応予定です。）</li>
+                  <li>推奨環境は、Windows（ブラウザ：Google Chrome, Microsoft Edge）およびmacOS（ブラウザ：Google Chrome, Safari）です。</li>
+                  <li>このゲームでは、マイクを使用します。周囲の環境には十分ご配慮ください。</li>
+                  <li>
+                    ゲームを開始した時点で、
+                    <router-link :to="{ name: 'Terms' }">利用規約</router-link>、
+                    <router-link :to="{ name: 'PrivacyPolicy' }">プライバシーポリシー</router-link>
+                    に同意頂いたものとみなします。</li>
+                </ul>
               </v-card-text>
 
               <v-divider></v-divider>
