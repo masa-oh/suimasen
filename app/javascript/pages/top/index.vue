@@ -9,18 +9,55 @@
         </p>
         <v-spacer />
         <!-- 開始ボタン -->
-        <v-btn
-            class="mb-8"
-            color="primary"
-            :to="{ name: 'StageSelectIndex' }"
-            x-large
-            dark
-        >
-          さっそくはじめる
-        </v-btn>
+        <div>
+          <v-dialog
+            v-model="dialog"
+            width="700"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                  class="mb-8"
+                  color="primary"
+                  x-large
+                  dark
+                  v-bind="attrs"
+                  v-on="on"
+              >
+                さっそくはじめる
+              </v-btn>
+            </template>
+
+            <v-card>
+              <v-card-title class="text-h5 white--text primary lighten-2" dark>
+                注意事項
+              </v-card-title>
+
+              <v-card-text>
+                <p />
+                <p>・このゲームは、PCでのみプレイ可能です。スマートフォンではご利用いただけません。（※近日中に対応予定です。）</p>
+                <p>・推奨環境は、Windows（ブラウザ：Google Chrome, Microsoft Edge）およびmacOS（ブラウザ：Google Chrome, Safari）です。</p>
+                <p>・このゲームでは、マイクを使用します。周囲の環境には十分ご配慮ください。</p>
+              </v-card-text>
+
+              <v-divider></v-divider>
+
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                  color="primary"
+                  text
+                  @click="dialog = false"
+                  :to="{ name: 'StageSelectIndex' }"
+                >
+                  わかった！
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+        </div>
       </v-col>
       <v-col cols="3">
-        <v-img class="img--woman" max-width="300" :src="src_woman" />
+        <v-img class="img--woman" max-width="300" :src="srcWoman" />
       </v-col>
       <v-spacer />
     </v-row>
@@ -38,7 +75,8 @@ export default {
   name: "TopIndex",
   data() {
     return {
-      src_woman: require("suimasen_woman.svg"),
+      dialog: false,
+      srcWoman: require("suimasen_woman.svg"),
     }
   },
 }
